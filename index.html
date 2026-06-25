@@ -10,10 +10,10 @@
 <style>
 /* ── 디자인 토큰 ── */
 :root{
-  --bg:#0f1623; --bg2:#0b1019; --card:#141d2e; --card2:#1a2436; --card3:#16213a;
-  --line:rgba(255,255,255,0.10); --line2:rgba(255,255,255,0.06);
-  --txt:#e8edf5; --txt2:#9aa6b8; --txt3:#6b7689;
-  --pass:#22c55e; --fail:#ef4444; --info:#4d8ef5; --warn:#f59e0b; --special:#a78bfa;
+  --bg:#0f0c08; --bg2:#0a0804; --card:#1a1410; --card2:#221a12; --card3:#1e1810;
+  --line:rgba(255,180,80,0.12); --line2:rgba(255,180,80,0.07);
+  --txt:#f0e8dc; --txt2:#b8a48a; --txt3:#7a6a54;
+  --pass:#22c55e; --fail:#ef4444; --info:#f97316; --warn:#fbbf24; --special:#fb923c;
   --r:13px;
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
@@ -25,7 +25,8 @@ body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-i
 
 /* ── 헤더 ── */
 .hdr{background:var(--bg2); padding:14px 16px; border-bottom:0.5px solid var(--line2);
-  display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:30;}
+  display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:30;
+  box-shadow:0 1px 0 0 rgba(249,115,22,0.25);}
 .hdr-l{display:flex; align-items:center; gap:8px;}
 .hdr-l b{font-weight:700; font-size:17px;}
 .hdr .ico{color:var(--info); font-size:20px;}
@@ -68,16 +69,16 @@ body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-i
 .seg.liq button.act{background:var(--info);}
 
 /* 추정 물성 카드 */
-.estcard{background:var(--card3); border:0.5px solid rgba(167,139,250,0.32); border-radius:11px; padding:13px; margin-bottom:16px;}
+.estcard{background:var(--card3); border:0.5px solid rgba(249,115,22,0.32); border-radius:11px; padding:13px; margin-bottom:16px;}
 .estcard .top{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
-.estcard .top .l{display:flex; align-items:center; gap:6px; color:#c4b5fd; font-size:12px; font-weight:500;}
+.estcard .top .l{display:flex; align-items:center; gap:6px; color:#fdba74; font-size:12px; font-weight:500;}
 .estcard .top .l i{color:var(--special); font-size:16px;}
-.estcard .badge{color:var(--special); font-size:11px; border:0.5px solid rgba(167,139,250,0.4); border-radius:5px; padding:2px 7px;}
+.estcard .badge{color:var(--special); font-size:11px; border:0.5px solid rgba(249,115,22,0.4); border-radius:5px; padding:2px 7px;}
 .estgrid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
 .estitem{background:var(--bg2); border-radius:7px; padding:7px 9px;}
 .estitem .k{color:var(--txt3); font-size:10px;}
 .estitem .v{color:var(--txt); font-family:'JetBrains Mono',monospace; font-size:13px; margin-top:2px;}
-.estitem.edit{outline:1px solid rgba(167,139,250,0.5);}
+.estitem.edit{outline:1px solid rgba(249,115,22,0.5);}
 .estitem input{width:100%; background:transparent; border:none; color:var(--special);
   font-family:'JetBrains Mono',monospace; font-size:13px; outline:none; margin-top:2px;}
 
@@ -143,6 +144,17 @@ body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-i
 .flist .fitem .fn{font-size:15px;} .flist .fitem .ft{color:var(--txt3); font-size:11px;}
 .flist .fitem.sel .fn{color:var(--info); font-weight:500;}
 .flist .nores{padding:24px; text-align:center; color:var(--txt3); font-size:13px; line-height:1.6;}
+
+/* ── 압력 프리셋 칩 ── */
+.presets{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:7px;}
+.preset-chip{background:var(--card2); border:0.5px solid var(--line); color:var(--txt2);
+  border-radius:7px; padding:6px 10px; font-size:12px; cursor:pointer; font-family:inherit;
+  min-height:32px; display:flex; align-items:center; gap:4px; white-space:nowrap;}
+.preset-chip:active{transform:scale(0.96);}
+.preset-chip.on{background:rgba(249,115,22,0.14); border-color:rgba(249,115,22,0.5); color:var(--special);}
+.preset-chip .pv{font-family:'JetBrains Mono',monospace; color:var(--txt3); font-size:11px;}
+.preset-chip.on .pv{color:var(--special);}
+.preset-note{color:var(--txt3); font-size:10px; margin-bottom:7px; line-height:1.5;}
 </style>
 </head>
 <body>
@@ -181,12 +193,17 @@ body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-i
       </div>
     </div>
 
-    <!-- 압력/온도 -->
-    <div class="row mb">
-      <div class="fld"><label>입구 압력</label>
-        <div class="inwrap"><input id="pres" inputmode="decimal" value="50"/><span class="u">barg</span></div></div>
-      <div class="fld"><label>입구 온도</label>
-        <div class="inwrap"><input id="temp" inputmode="decimal" value="40"/><span class="u">℃</span></div></div>
+    <!-- 압력 (프리셋 칩 + 직접입력) -->
+    <div class="fld">
+      <label>입구 압력</label>
+      <div class="presets" id="presChips"></div>
+      <div class="preset-note" id="presNote"></div>
+      <div class="inwrap"><input id="pres" inputmode="decimal" value="50"/><span class="u">barg</span></div>
+    </div>
+    <!-- 온도 -->
+    <div class="fld">
+      <label>입구 온도</label>
+      <div class="inwrap"><input id="temp" inputmode="decimal" value="40"/><span class="u">℃</span></div>
     </div>
 
     <!-- NPS/Schedule (휠) -->
@@ -194,7 +211,7 @@ body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-i
       <div class="fld"><label>배관 Size (NPS)</label>
         <button class="selbtn" id="npsBtn"><span id="npsLbl">6"</span><i>⌄</i></button></div>
       <div class="fld"><label>Schedule</label>
-        <button class="selbtn" id="schBtn"><span id="schLbl">Sch 40</span><i>⌄</i></button></div>
+        <button class="selbtn" id="schBtn"><span id="schLbl">Sch 40 (STD)</span><i>⌄</i></button></div>
     </div>
 
     <!-- 재질 (휠) -->
@@ -281,18 +298,43 @@ const MATERIALS=[
   {key:'old',label:'노후 탄소강',eps:1.0}
 ];
 
-// ── NPS 내경(mm) : Sch별 (대표값, 추후 전체확장 필요) ──
+// ── NPS 내경(mm) : Sch별 (ASME B36.10M, ID = OD - 2×wall) ──
+// 각 사이즈에 실제 존재하는 Schedule만 포함. STD/XS는 별도 표기.
 const PIPE_ID = {
-  '2"':{'Sch 40':52.5,'Sch 80':49.2,'Sch 160':42.8},
-  '3"':{'Sch 40':77.9,'Sch 80':73.7,'Sch 160':66.6},
-  '4"':{'Sch 40':102.3,'Sch 80':97.2,'Sch 160':87.3},
-  '6"':{'Sch 40':154.1,'Sch 80':146.3,'Sch 160':131.8},
-  '8"':{'Sch 40':202.7,'Sch 80':193.7,'Sch 160':173.1},
-  '10"':{'Sch 40':254.5,'Sch 80':242.9,'Sch 160':215.9},
-  '12"':{'Sch 40':303.2,'Sch 80':288.9,'Sch 160':257.2}
+  '1"':{'Sch 10':27.9,'Sch 40 (STD)':26.6,'Sch 80 (XS)':24.3,'Sch 160':20.7},
+  '1.5"':{'Sch 10':42.7,'Sch 40 (STD)':40.9,'Sch 80 (XS)':38.1,'Sch 160':33.9},
+  '2"':{'Sch 10':54.8,'Sch 40 (STD)':52.5,'Sch 80 (XS)':49.2,'Sch 160':42.8},
+  '3"':{'Sch 10':84.7,'Sch 40 (STD)':77.9,'Sch 80 (XS)':73.7,'Sch 160':66.6},
+  '4"':{'Sch 10':110.1,'Sch 40 (STD)':102.3,'Sch 80 (XS)':97.2,'Sch 120':92.0,'Sch 160':87.3},
+  '6"':{'Sch 10':161.5,'Sch 40 (STD)':154.1,'Sch 80 (XS)':146.3,'Sch 120':139.7,'Sch 160':131.8},
+  '8"':{'Sch 10':211.6,'Sch 20':206.4,'Sch 40 (STD)':202.7,'Sch 80 (XS)':193.7,'Sch 120':182.6,'Sch 160':173.1},
+  '10"':{'Sch 10':264.7,'Sch 20':260.4,'Sch 40 (STD)':254.5,'Sch 80':242.9,'Sch 120':230.2,'Sch 160':215.9},
+  '12"':{'Sch 10':315.9,'Sch 20':311.2,'Sch 40 (STD)':303.2,'Sch 80':288.9,'Sch 120':273.1,'Sch 160':257.2},
+  '14"':{'Sch 10':347.7,'Sch 20':342.9,'Sch 40 (STD)':333.3,'Sch 80':317.5,'Sch 120':300.0,'Sch 160':284.2},
+  '16"':{'Sch 10':398.5,'Sch 20':393.7,'Sch 40 (STD)':381.0,'Sch 80':363.5,'Sch 120':344.5,'Sch 160':325.4},
+  '18"':{'Sch 10':449.6,'Sch 20':444.5,'Sch 40 (STD)':428.7,'Sch 80':409.5,'Sch 120':387.4,'Sch 160':366.5},
+  '20"':{'Sch 10':500.4,'Sch 20':495.3,'Sch 40 (STD)':477.8,'Sch 80':455.6,'Sch 120':431.8,'Sch 160':407.9},
+  '24"':{'Sch 10':603.2,'Sch 20':596.9,'Sch 40 (STD)':574.6,'Sch 80':547.7,'Sch 120':517.6,'Sch 160':490.5},
+  '30"':{'Sch 10':755.6,'Sch 20':749.3,'STD':762.0,'XS':749.3},
+  '36"':{'Sch 10':908.0,'Sch 20':901.7,'STD':914.4,'XS':901.7}
 };
 const NPS_LIST=Object.keys(PIPE_ID);
-const SCH_LIST=['Sch 40','Sch 80','Sch 160'];
+// 선택된 NPS에 실제 존재하는 Schedule 목록만 반환
+function schListFor(nps){ return Object.keys(PIPE_ID[nps]||{}); }
+
+// ── 유체별 압력 프리셋(barg) : 업계 전형값(참고). 반드시 자기 플랜트 값으로 확정 ──
+const PRES_PRESETS = {
+  STEAM:{ note:'스팀 헤더 전형값(참고). 플랜트마다 다름 — 실제 헤더압 확인 필요',
+    items:[['LP 저압',3.5],['MP 중압',10],['HP 고압',42],['VHP 초고압',100]] },
+  AIR:{ note:'플랜트 에어/계장 에어 전형값(참고)',
+    items:[['플랜트 에어',6],['계장 에어',7]] },
+  N2:{ note:'질소 용도별 전형값(참고)',
+    items:[['퍼지/블랭킷',0.5],['공급 헤더',8]] },
+  NG:{ note:'천연가스 용도별 전형값(참고)',
+    items:[['연료가스',4],['공급',20]] },
+  COOLING_WATER:{ note:'냉각수 공급 전형값(참고)',
+    items:[['공급',4]] }
+};
 const FLOWUNITS=['Nm³/h','kg/h','m³/h'];
 
 // ── 2. Z-factor 2종 ──
@@ -363,8 +405,25 @@ function colebrook(Re,relEps){
 }
 
 // ── 5. 상태 ──
-const state={phase:'gas',fluid:'NG',flowUnit:'Nm³/h',nps:'6"',sch:'Sch 40',mat:'cs',
+const state={phase:'gas',fluid:'NG',flowUnit:'Nm³/h',nps:'6"',sch:'Sch 40 (STD)',mat:'cs',
   override:{}}; // override: {Z, rho, mu, eps}
+
+// ── 압력 프리셋 칩 렌더 ──
+function renderPresetChips(){
+  const wrap=$('presChips'), note=$('presNote');
+  const preset=PRES_PRESETS[state.fluid];
+  wrap.innerHTML=''; note.textContent='';
+  if(!preset){ note.textContent='이 유체는 통용 프리셋이 없습니다 — 압력 직접 입력'; return; }
+  const cur=parseFloat($('pres').value);
+  preset.items.forEach(([lbl,val])=>{
+    const c=document.createElement('button');
+    c.className='preset-chip'+(Math.abs(cur-val)<1e-6?' on':'');
+    c.innerHTML=`${lbl}<span class="pv">${val} barg</span>`;
+    c.onclick=()=>{ $('pres').value=val; renderPresetChips(); renderEst(); };
+    wrap.appendChild(c);
+  });
+  note.textContent='⚠ '+preset.note;
+}
 
 // ── 6. 추정 물성 카드 렌더 ──
 function currentEps(){
@@ -420,7 +479,9 @@ function calculate(){
     const est=estimateProperties(state.fluid,Tc,Pb);
     if(!est.ok){ alert('미지원 유체입니다. 실측 물성 직접 입력 모드를 사용하세요.'); return; }
 
-    const D=PIPE_ID[state.nps][state.sch]/1000; // m
+    const idVal=(PIPE_ID[state.nps]||{})[state.sch];
+    if(idVal==null){ alert('선택한 사이즈·Schedule 조합의 내경 데이터가 없습니다.'); return; }
+    const D=idVal/1000; // m
     const A=Math.PI*D*D/4;
     const eps=currentEps()/1000; // m
     const relEps=eps/D;
@@ -577,8 +638,19 @@ $('wheelCancel').onclick=()=>$('wheelScrim').classList.remove('show');
 $('wheelScrim').onclick=e=>{ if(e.target===$('wheelScrim'))$('wheelScrim').classList.remove('show'); };
 
 // ── 휠 연결 ──
-$('npsBtn').onclick=()=>openWheel('배관 Size',NPS_LIST,NPS_LIST.indexOf(state.nps),i=>{state.nps=NPS_LIST[i];$('npsLbl').textContent=state.nps;});
-$('schBtn').onclick=()=>openWheel('Schedule',SCH_LIST,SCH_LIST.indexOf(state.sch),i=>{state.sch=SCH_LIST[i];$('schLbl').textContent=state.sch;});
+$('npsBtn').onclick=()=>openWheel('배관 Size',NPS_LIST,NPS_LIST.indexOf(state.nps),i=>{
+  state.nps=NPS_LIST[i]; $('npsLbl').textContent=state.nps;
+  // 새 사이즈에 현재 Sch가 없으면 유효한 첫 항목(또는 STD 우선)으로 보정
+  const list=schListFor(state.nps);
+  if(!list.includes(state.sch)){
+    state.sch = list.find(s=>/STD|Sch 40/.test(s)) || list[0];
+    $('schLbl').textContent=state.sch;
+  }
+});
+$('schBtn').onclick=()=>{ const list=schListFor(state.nps);
+  let idx=list.indexOf(state.sch); if(idx<0)idx=0;
+  openWheel('Schedule',list,idx,i=>{state.sch=list[i];$('schLbl').textContent=state.sch;});
+};
 $('flowUnitBtn').onclick=()=>openWheel('유량 단위',FLOWUNITS,FLOWUNITS.indexOf(state.flowUnit),i=>{state.flowUnit=FLOWUNITS[i];$('flowUnitLbl').textContent=state.flowUnit;});
 $('matBtn').onclick=()=>openWheel('배관 재질',MATERIALS.map(m=>m.label),MATERIALS.findIndex(m=>m.key===state.mat),i=>{
   state.mat=MATERIALS[i].key; $('matLbl').textContent=MATERIALS[i].label; delete state.override.eps; renderEst();});
@@ -599,7 +671,7 @@ function renderFluidList(filter=''){
     const d=document.createElement('div'); d.className='fitem'+(k===state.fluid?' sel':'');
     d.innerHTML=`<span class="fn">${f.label}</span><span class="ft">${f.conf} · ${f.note}</span>`;
     d.onclick=()=>{ state.fluid=k; $('fluidLbl').textContent=f.label; state.override={};
-      $('fluidScrim').classList.remove('show'); renderEst(); };
+      $('fluidScrim').classList.remove('show'); renderPresetChips(); renderEst(); };
     list.appendChild(d);
   });
 }
@@ -615,15 +687,17 @@ $('phaseSeg').querySelectorAll('button').forEach(b=>{
     // 기본 유체 전환
     state.fluid = state.phase==='gas'?'NG':'WATER';
     $('fluidLbl').textContent=FLUID_DB[state.fluid].label;
-    state.override={}; renderEst();
+    state.override={}; renderPresetChips(); renderEst();
   };
 });
 
 // ── 입력 변동 시 추정 갱신 ──
-['temp','pres'].forEach(id=>$(id).addEventListener('input',renderEst));
+$('temp').addEventListener('input',renderEst);
+$('pres').addEventListener('input',()=>{ renderPresetChips(); renderEst(); });
 $('calcBtn').onclick=calculate;
 
 // ── 초기 ──
+renderPresetChips();
 renderEst();
 </script>
 </body>
