@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>PipeCalc v6.2 사용 설명서</title>
+<style>
+:root{--bg:#0f0c08;--bg2:#0a0804;--card:#1a1410;--card2:#221a12;--line:rgba(255,180,80,.14);--txt:#f0e8dc;--txt2:#b8a48a;--txt3:#7a6a54;--orange:#f97316;--warn:#fbbf24;--red:#ef4444;--green:#22c55e}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',Arial,sans-serif;line-height:1.65;padding-bottom:calc(92px + env(safe-area-inset-bottom))}.wrap{max-width:760px;margin:0 auto}.hdr{position:sticky;top:0;z-index:20;background:rgba(10,8,4,.96);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:12px 14px;display:flex;align-items:center;justify-content:space-between}.hdr b{font-size:17px}.hdr small{display:block;color:var(--txt3);font-size:10px}.back{min-height:44px;padding:0 13px;border-radius:10px;border:1px solid rgba(249,115,22,.45);background:rgba(249,115,22,.1);color:#fb923c;text-decoration:none;display:flex;align-items:center;font-weight:700;font-size:13px}.body{padding:16px 14px}.hero{padding:18px 15px;background:linear-gradient(145deg,rgba(249,115,22,.13),rgba(34,26,18,.75));border:1px solid rgba(249,115,22,.28);border-radius:15px;margin-bottom:14px}.hero h1{font-size:23px;line-height:1.35;margin:0 0 8px}.hero p{color:var(--txt2);font-size:13px;margin:0}.toc{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px}.toc a{min-height:48px;border-radius:10px;background:var(--card);border:1px solid var(--line);color:var(--txt2);text-decoration:none;padding:10px 12px;font-size:12px;display:flex;align-items:center}.section{scroll-margin-top:76px;margin:0 0 16px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px}.section h2{font-size:18px;margin:0 0 10px;color:#fdba74}.section h3{font-size:14px;margin:16px 0 7px}.section p,.section li{font-size:12px;color:var(--txt2)}.section ul,.section ol{padding-left:20px;margin:8px 0}.table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--line)}table{width:100%;border-collapse:collapse;min-width:560px;background:var(--bg2)}th,td{padding:9px 10px;border-bottom:1px solid var(--line);font-size:11px;text-align:left;vertical-align:top}th{color:#fdba74;background:var(--card2)}td{color:var(--txt2)}tr:last-child td{border-bottom:none}.badge{display:inline-block;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:800}.pass{color:var(--green);background:rgba(34,197,94,.12)}.fail{color:#fca5a5;background:rgba(239,68,68,.12)}.caution,.hold{color:var(--warn);background:rgba(245,158,11,.12)}.notice{padding:11px 12px;border-radius:10px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.28);color:#fbbf6b;font-size:11px;margin:10px 0}.danger{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.32);color:#fca5a5}.info{background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.28);color:#93c5fd}.flow{display:grid;gap:7px}.step{display:grid;grid-template-columns:32px 1fr;gap:9px;align-items:start;padding:9px;border-radius:10px;background:var(--bg2)}.num{width:32px;height:32px;border-radius:9px;background:var(--orange);color:white;display:flex;align-items:center;justify-content:center;font-weight:800}.step b{font-size:12px}.step span{display:block;color:var(--txt3);font-size:11px;margin-top:2px}.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(760px,100%);padding:9px 12px calc(9px + env(safe-area-inset-bottom));background:rgba(10,8,4,.97);border-top:1px solid var(--line)}.bottom a{min-height:54px;border-radius:12px;background:var(--orange);color:white;text-decoration:none;display:flex;align-items:center;justify-content:center;font-weight:800}.code{font-family:'SFMono-Regular',Consolas,monospace;color:#fdba74}.source a{color:#fdba74;word-break:break-all}@media(max-width:420px){.toc{grid-template-columns:1fr}.body{padding-left:10px;padding-right:10px}.section{padding:13px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="hdr"><div><b>PipeCalc v6.2 사용 설명서</b><small>모바일 현장 배관 적합성 1차 검토</small></div><a class="back" href="index.html">앱으로</a></header>
+<main class="body">
+<section class="hero"><h1>입력 → 계산 → 판정 → 상세 확인</h1><p>PipeCalc는 단상(Single-Phase) 배관의 유속·압력강하·Mach·출구압력을 빠르게 확인하는 현장 스크리닝 도구입니다. 상세설계 프로그램과 법규 검토를 대체하지 않습니다.</p></section>
+<nav class="toc">
+<a href="#scope">용도와 적용 범위</a><a href="#quick">빠른 사용 순서</a><a href="#input">입력값과 단위</a><a href="#result">결과 읽는 법</a><a href="#setting">판정 기준 설정</a><a href="#model">계산·물성 모델</a><a href="#phase">HOLD와 상변화</a><a href="#limit">제한사항·배포</a>
+</nav>
+
+<section class="section" id="scope"><h2>1. 용도와 적용 범위</h2>
+<div class="table-wrap"><table><thead><tr><th>구분</th><th>내용</th></tr></thead><tbody>
+<tr><td>주요 용도</td><td>신규 배관 Size 후보 비교, 기존 배관 증량 여유 확인, 회의·현장의 즉시 검토, 설계 계산서의 개략 교차검산</td></tr>
+<tr><td>기본 가정</td><td>정상상태(Steady State), 등온(Isothermal), 단상(Single Phase), 단일 배관 구간</td></tr>
+<tr><td>계산하지 않는 항목</td><td>실제 2상 압력강하, 분기 관망, 펌프·압축기 성능곡선, 제어밸브 Cv, Relief/Flare Sizing, 수격·응력·진동·소음·재질 적합성</td></tr>
+<tr><td>결과의 성격</td><td>FIELD/FEED 1차 스크리닝 결과입니다. PASS는 상세설계 승인이나 안전성 보증을 의미하지 않습니다.</td></tr>
+</tbody></table></div>
+<div class="notice danger">Flash·응축·등온 임계조건으로 HOLD가 표시되면 단상 계산값을 설계값으로 채택하지 마십시오.</div></section>
+
+<section class="section" id="quick"><h2>2. 빠른 사용 순서</h2><div class="flow">
+<div class="step"><div class="num">1</div><div><b>기체 또는 액체 선택</b><span>상(Phase)을 먼저 선택한 뒤 유체를 선택합니다. EDC·VCM·Cl₂는 기체와 액체 항목이 각각 존재합니다.</span></div></div>
+<div class="step"><div class="num">2</div><div><b>유량·압력·온도 입력</b><span>압력 입력은 barg입니다. 기체의 Nm³/h는 0℃·1 atm 기준으로 질량유량으로 환산됩니다.</span></div></div>
+<div class="step"><div class="num">3</div><div><b>NPS·Schedule·재질 선택</b><span>내경은 ASME B36.10-2022 치수 데이터에서 조회합니다. 재질 선택은 절대조도 ε에 반영됩니다.</span></div></div>
+<div class="step"><div class="num">4</div><div><b>길이·고도차·부속 여유 입력</b><span>고도차는 출구−입구입니다. 상향은 +, 하향은 −입니다. 부속 여유는 직관 길이에 백분율로 가산합니다.</span></div></div>
+<div class="step"><div class="num">5</div><div><b>기준 프로파일 확인 후 계산</b><span>계산 후 하단 Dock을 눌러 신뢰도, 물성 모델, Reynolds 수, 마찰계수, OD·벽두께·ID를 확인합니다.</span></div></div>
+</div></section>
+
+<section class="section" id="input"><h2>3. 입력값과 단위</h2>
+<div class="table-wrap"><table><thead><tr><th>입력</th><th>단위·처리</th><th>주의사항</th></tr></thead><tbody>
+<tr><td>압력</td><td>barg 입력, 내부에서 <span class="code">bara = barg + 1.01325</span>로 변환</td><td>bara 값을 그대로 넣지 마십시오.</td></tr>
+<tr><td>기체 Nm³/h</td><td>0℃·1 atm의 정상체적유량을 질량유량으로 환산</td><td>실제 운전 m³/h와 혼동하지 마십시오.</td></tr>
+<tr><td>기체 m³/h</td><td>입구 운전조건의 밀도로 질량유량 환산</td><td>입구 실제체적유량을 입력합니다.</td></tr>
+<tr><td>액체 m³/h·kg/h</td><td>체적유량 또는 밀도를 이용한 체적유량 환산</td><td>kg/h 사용 시 밀도 정확도가 유속에도 영향을 줍니다.</td></tr>
+<tr><td>길이</td><td>직관 길이 m</td><td>유효길이 = 직관 길이 × (1 + 부속 여유율)</td></tr>
+<tr><td>고도차</td><td>m, 출구−입구</td><td>총 ΔP에는 정수두가 포함되지만 ΔP/100m 지표는 마찰손실 기준입니다.</td></tr>
+<tr><td>NPS·Schedule</td><td>지원 NPS: 1, 1.5, 2, 3, 4, 6, 8, 10, 12, 14, 16, 18, 20, 24, 30, 36 inch</td><td>목록에 없는 1/2″, 3/4″, 2.5″, 5″ 등은 지원하지 않습니다.</td></tr>
+</tbody></table></div>
+<h3>배관 치수와 재질 선택의 관계</h3>
+<p>치수 데이터는 재질 선택과 무관하게 <b>ASME B36.10-2022</b>를 사용합니다. 재질 선택은 절대조도 ε만 변경합니다. 따라서 스테인리스 배관의 ASME B36.19M Schedule 5S·10S·40S·80S 치수가 필요한 경우에는 앱 내 치수와 별도로 확인해야 합니다.</p>
+<p>표준에서 서로 다른 명칭이 동일한 벽두께를 뜻하는 경우에는 <span class="code">Sch 20 / STD</span>, <span class="code">Sch 20 / XS</span>, <span class="code">Sch 40 / XS</span>처럼 한 항목으로 병기됩니다. 벽두께가 다른 경우에는 STD·XS와 Sch 40·80이 별도 항목으로 표시됩니다.</p></section>
+
+<section class="section" id="result"><h2>4. 결과 읽는 법</h2>
+<div class="table-wrap"><table><thead><tr><th>표시</th><th>의미</th><th>현장 조치</th></tr></thead><tbody>
+<tr><td><span class="badge pass">PASS</span></td><td>저장된 유속·ΔP/100m·Mach·최소 출구압 기준을 통과</td><td>오차 Band와 제한사항을 포함해 1차 판단</td></tr>
+<tr><td><span class="badge fail">FAIL</span></td><td>하나 이상의 사용자 설정 기준을 초과</td><td>Size 확대, 유량·길이·부속·최소 요구압 재검토</td></tr>
+<tr><td><span class="badge caution">CAUTION</span></td><td>계산은 완료됐으나 물성 신뢰도, 임계점 근접, Z 입력 불일치 등 추가 확인 필요</td><td>실제 물성 또는 전용 프로그램으로 재검증</td></tr>
+<tr><td><span class="badge hold">HOLD</span></td><td>Flash·응축·상 선택 불일치 또는 등온 임계조건 도달</td><td>정상 단상 결과 채택 금지. 2상 또는 압축성 유동 상세해석</td></tr>
+</tbody></table></div>
+<h3>핵심 출력값</h3>
+<div class="table-wrap"><table><thead><tr><th>출력</th><th>해석</th></tr></thead><tbody>
+<tr><td>Velocity</td><td>액체는 관내 평균 유속, 기체는 계산 구간의 최대 유속을 기준으로 판정합니다.</td></tr>
+<tr><td>ΔP / 100m</td><td>유효길이에 대한 마찰 압력강하를 100m로 환산한 값입니다. 고도차 정수두는 이 지표에서 제외됩니다.</td></tr>
+<tr><td>Outlet Pressure</td><td>마찰손실과 고도차를 반영한 예상 출구 게이지압입니다.</td></tr>
+<tr><td>Mach</td><td>기체 전용. 설정 기준과 별도로 앱 내부 등온 임계기준도 확인합니다.</td></tr>
+<tr><td>예상 계산오차</td><td>통계적 신뢰구간이 아니라 물성·모델·입력조건을 이용한 공학적 휴리스틱(Heuristic) Band입니다.</td></tr>
+</tbody></table></div>
+<p>입력값, 유체, NPS, Schedule, 재질 또는 직접물성을 변경하면 이전 결과가 즉시 무효화되고 Dock이 숨겨집니다. 새 조건에서는 반드시 다시 계산해야 합니다.</p></section>
+
+<section class="section" id="setting"><h2>5. 판정 기준 프로파일</h2>
+<p>설정값은 브라우저 Local Storage에 저장됩니다. 기본값은 법규나 국제표준이 아니라 예시값이므로 사내 Design Criteria로 수정해야 합니다.</p>
+<div class="table-wrap"><table><thead><tr><th>프로파일</th><th>기본 용도</th><th>별도 확인사항</th></tr></thead><tbody>
+<tr><td>일반 배관</td><td>범용 1차 검토</td><td>서비스별 허용 유속·소음·침식 기준</td></tr>
+<tr><td>펌프 전단(Suction)</td><td>흡입측 유속·손실을 보수적으로 제한</td><td>NPSHa/NPSHr, 액면, 포화압력, Strainer 손실</td></tr>
+<tr><td>냉각수(CW)</td><td>순환수 배관의 빠른 검토</td><td>스케일·오염·부식·수질 첨가제 영향</td></tr>
+<tr><td>공용 헤더(Header)</td><td>다수 사용처가 연결된 헤더의 보수적 검토</td><td>동시사용률, 최소 공급압, 분기 관망해석</td></tr>
+<tr><td>사용자 정의</td><td>공장·공정별 자체 기준 저장</td><td>최소 출구압력을 설정하면 FAIL 판정에 포함</td></tr>
+</tbody></table></div></section>
+
+<section class="section" id="model"><h2>6. 계산 원리와 물성 모델</h2>
+<h3>압력강하</h3>
+<div class="table-wrap"><table><thead><tr><th>상</th><th>계산 방식</th><th>주요 가정</th></tr></thead><tbody>
+<tr><td>액체</td><td>Darcy–Weisbach 비압축성 식 + 정수두 <span class="code">ρgΔz</span></td><td>관 전체에서 밀도와 점도를 일정하게 사용</td></tr>
+<tr><td>기체</td><td>등온 압축성 <span class="code">P²</span> 식을 40개 구간으로 적분</td><td>질량속도 일정, 각 구간에서 Z·밀도·점도를 다시 평가</td></tr>
+<tr><td>마찰계수</td><td>Re&lt;2300은 <span class="code">64/Re</span>, 그 외는 Colebrook–White 반복계산</td><td>천이영역은 신뢰도 저하 사유에 포함</td></tr>
+</tbody></table></div>
+<h3>유체별 물성 처리</h3>
+<div class="table-wrap"><table><thead><tr><th>유체군</th><th>주요 모델</th><th>사용 시 주의</th></tr></thead><tbody>
+<tr><td>NG·LNG BOG</td><td>DAK 또는 Peng–Robinson의 Z, Lee–Gonzalez–Eakin 점도</td><td>조성 입력이 없어 Dew/Bubble Point를 계산하지 못합니다.</td></tr>
+<tr><td>N₂·Air·H₂·CO₂·C₂H₄·C₃H₆</td><td>Pitzer 또는 Peng–Robinson 자동 선택</td><td>임계점 근처에서는 모델 편차와 실제 물성 급변에 주의합니다.</td></tr>
+<tr><td>Steam</td><td>Peng–Robinson EOS로 Z·밀도 추정, 기체점도는 온도지수 근사</td><td>IAPWS-IF97은 구현되어 있지 않습니다. 앱은 실제 계산값을 일부러 틀리게 만드는 것이 아니라, 이 모델 한계를 반영해 <b>표시 불확실성 Band를 보수적으로 넓힙니다.</b> 포화선 근처·임계영역·고정확도 Steam 계산은 IAPWS-IF97 또는 전용 도구로 확인하십시오.</td></tr>
+<tr><td>EDC·VCM·Cl₂ 증기</td><td>Pitzer/PR + 유체별 점도 근사 + 포화압력 스크리닝</td><td>포화압력 자료 범위 밖에서는 자동 상변화 판정이 제한될 수 있습니다.</td></tr>
+<tr><td>Water·CW</td><td>0~100℃ 물 밀도 3차 근사식 + Vogel 점도식</td><td>밀도식은 NIST 표 값을 근사한 앱 식이며 NIST 공식식 자체가 아닙니다. CW 첨가제·염류는 미반영입니다.</td></tr>
+<tr><td>메탄올</td><td>NIST 참조상관식의 포화액 표 값을 5℃ 간격으로 저장하여 선형보간</td><td>전체 NIST 상관식을 구현한 것이 아니며, 압력 의존성은 반영하지 않습니다.</td></tr>
+<tr><td>에탄올</td><td>NIST가 제시한 0.1 MPa 전용 점도 상관식</td><td>고압 액체 점도의 밀도·압력 의존성은 반영하지 않습니다.</td></tr>
+<tr><td>액체 EDC</td><td>25℃ 밀도 1245.4 kg/m³를 기준으로 선형 온도보정</td><td>25℃ 기준점은 ATSDR 자료이며 온도 기울기는 앱 근사입니다.</td></tr>
+<tr><td>액체 VCM·Cl₂</td><td>기준 밀도·점도와 온도보정</td><td>가압 액체 현장근사입니다. 실제 운전조건 물성 입력이 우선입니다.</td></tr>
+<tr><td>NaOH 수용액</td><td>농도·온도 표의 2차원 보간</td><td>20~100℃·0~50 wt% 밖에서는 경계값으로 Clamp하고 신뢰도를 낮춥니다.</td></tr>
+<tr><td>암모니아·기타 액체</td><td>ρ·μ 직접입력</td><td>두 값이 모두 입력되기 전에는 계산하지 않습니다.</td></tr>
+</tbody></table></div>
+
+<h3>기체 직접물성 입력과 Z 검사</h3>
+<p>기체 밀도 ρ를 직접입력하면 앱은 <span class="code">Zeff = P/(ρ·Rs·T)</span>를 역산하여 기체 압력강하와 관내 밀도 계산에 적용합니다. Z를 직접입력하면 해당 Z에 맞춰 입구 밀도를 다시 계산합니다. ρ와 Z는 동시에 독립적으로 고정되지 않습니다.</p>
+<div class="table-wrap"><table><thead><tr><th>검사</th><th>조건</th><th>처리</th></tr></thead><tbody>
+<tr><td>강제 중단</td><td>Z≤0.10 또는 Z&gt;3.00, NaN·Infinity</td><td>입력 오류 가능성이 높아 계산 중단</td></tr>
+<tr><td>CAUTION</td><td>0.10&lt;Z&lt;0.20 또는 2.00&lt;Z≤3.00</td><td>계산은 진행하되 신뢰도 하향</td></tr>
+<tr><td>자동모델 비교</td><td>입력 기반 Z가 자동모델의 0.5배 미만 또는 2배 초과</td><td>소수점·단위·압력 기준을 확인하도록 경고</td></tr>
+</tbody></table></div>
+<div class="notice">이 Z 범위는 보편적인 EOS 유효범위가 아니라, 현장의 단위·소수점 오입력을 검출하기 위한 앱 전용 Sanity Guard입니다.</div></section>
+
+<section class="section" id="phase"><h2>7. 상변화 경고와 등온 임계조건</h2>
+<h3>상변화 스크리닝</h3>
+<p>앱은 실제 Two-Phase Pressure Drop을 계산하지 않습니다. 사용 가능한 순수유체 포화압력 <span class="code">Psat</span>과 입·출구 절대압력을 비교하여 위험만 감지합니다.</p>
+<div class="table-wrap"><table><thead><tr><th>조건</th><th>표시</th><th>의미</th></tr></thead><tbody>
+<tr><td>액체 입구 또는 출구압이 Psat 부근 이하</td><td>HOLD</td><td>Flash 가능. 단상 액체 결과 채택 금지</td></tr>
+<tr><td>기체 입구압이 Psat보다 높거나 근접</td><td>HOLD/CAUTION</td><td>상 선택 오류 또는 응축 가능성 확인</td></tr>
+<tr><td>NG·BOG</td><td>판정 제한</td><td>조성 없이 Dew/Bubble Point 계산 불가</td></tr>
+<tr><td>NaOH</td><td>판정 제외</td><td>농도별 VLE 데이터 미지원</td></tr>
+<tr><td>VCM 25℃ 초과</td><td>판정 제한</td><td>현재 내장된 상온 기준점 범위를 넘어 자동 Psat을 제시하지 않음</td></tr>
+</tbody></table></div>
+<p>VCM의 20℃·25℃ 증기압 기준점은 ATSDR 자료를 사용하고, 기준점 사이의 계산은 앱 내부 보간입니다. 이는 공인 VCM 포화압력 상관식 전체를 구현한 것이 아닙니다.</p>
+<h3>기체 등온 임계조건</h3>
+<p>앱은 등온 압축성 P² 모델의 내부 중단 기준으로 <span class="code">Ma_iso = 1/√k</span>를 사용합니다. 이 기준에 도달하면 전체 길이의 ΔP/100m와 출구압력을 <b>미산정</b>으로 표시하고 HOLD 처리합니다.</p>
+<div class="notice info">이 HOLD는 실제 Fanno Flow 또는 Real-Gas Choking을 완전하게 계산했다는 뜻이 아닙니다. 단순 등온 모델을 더 이상 안전하게 외삽하지 않기 위한 중단 규칙입니다.</div></section>
+
+<section class="section" id="limit"><h2>8. 신뢰도·제한사항·배포</h2>
+<h3>신뢰도 등급</h3>
+<div class="table-wrap"><table><thead><tr><th>등급</th><th>일반적 의미</th><th>권장 사용</th></tr></thead><tbody>
+<tr><td>A</td><td>지원 물성식의 양호한 범위</td><td>현장 1차 판단</td></tr>
+<tr><td>B</td><td>보통 수준의 추정</td><td>오차 Band를 포함해 판단</td></tr>
+<tr><td>C</td><td>물성·모델 불확실성 증가</td><td>실제 물성 또는 추가 검증 권장</td></tr>
+<tr><td>D</td><td>범위 밖·특수액체·임계점 등</td><td>참고만 하고 상세검증</td></tr>
+</tbody></table></div>
+<h3>주요 제한사항</h3>
+<ul>
+<li>Steam 전용 IAPWS-IF97을 구현하지 않았습니다.</li>
+<li>ASME B36.19M 스테인리스 Schedule S 치수는 제공하지 않습니다.</li>
+<li>실제 2상 압력강하, 완전한 Choked/Fanno 해석, NG·BOG 조성별 상평형을 지원하지 않습니다.</li>
+<li>부속손실은 개별 K값이 아니라 길이 여유율로만 반영합니다.</li>
+<li>오차 Band는 통계적 보증값이나 검교정 성적서가 아닙니다.</li>
+</ul>
+<h3>GitHub Pages 파일 구성</h3>
+<p>계산 앱의 메인 진입 파일은 <span class="code">index.html</span>입니다. 아래 파일을 같은 폴더에 배치하면 앱과 설명서가 서로 이동합니다.</p>
+<pre class="code">index.html
+PipeCalc_v6_2_Manual.html
+PipeCalc_v6_2_Update_Notes.md</pre>
+<p>이 설명서의 상단 및 하단 버튼은 모두 <span class="code">index.html</span>로 이동합니다.</p></section>
+
+<section class="section source"><h2>9. 주요 근거 자료</h2><p>아래 링크는 치수·물성·모델 범위를 확인하기 위한 주요 원문입니다. 앱 내부의 보간식·안전 Guard·오차 Band는 이 자료를 그대로 복제한 공식식이 아니라 PipeCalc의 현장 스크리닝 구현입니다.</p><ul>
+<li>ASME B36.10-2022: <a href="https://www.asme.org/codes-standards/find-codes-standards/welded-and-seamless-wrought-steel-pipe">Welded and Seamless Wrought Steel Pipe</a></li>
+<li>ASME B36.19M: <a href="https://www.asme.org/codes-standards/find-codes-standards/b36-19m-stainless-steel-pipe">Stainless Steel Pipe</a></li>
+<li>IAPWS: <a href="https://iapws.org/documents/release/IF97-Rev">IAPWS-IF97 Industrial Formulation</a></li>
+<li>NISTIR 5078: <a href="https://www.nist.gov/system/files/documents/srd/NISTIR5078-Tab3.pdf">Compressed Water and Superheated Steam Table</a></li>
+<li>NIST Methanol: <a href="https://www.nist.gov/document/jpcrd3520061597pdf">Reference Correlation for the Viscosity of Methanol</a></li>
+<li>NIST Ethanol: <a href="https://www.nist.gov/publications/reference-correlation-viscosity-ethanol-triple-point-620-k-and-102-mpa">Reference Correlation for the Viscosity of Ethanol</a></li>
+<li>NIST WebBook VCM: <a href="https://webbook.nist.gov/cgi/cbook.cgi?ID=C75014&amp;Mask=4&amp;Plot=on&amp;Type=ANTOINE">Vinyl Chloride Antoine Parameters</a></li>
+<li>ATSDR VCM: <a href="https://www.atsdr.cdc.gov/toxprofiles/tp20-c4.pdf">Physical and Chemical Properties of Vinyl Chloride</a></li>
+<li>ATSDR EDC: <a href="https://www.atsdr.cdc.gov/toxprofiles/tp38-c4.pdf">Physical and Chemical Properties of 1,2-Dichloroethane</a></li>
+<li>OxyChem: <a href="https://www.oxychem.com/chlor-alkali/">Caustic Soda Technical Resources</a></li>
+</ul></section>
+</main></div>
+<div class="bottom"><a href="index.html">PipeCalc 앱으로 돌아가기</a></div>
+</body></html>
