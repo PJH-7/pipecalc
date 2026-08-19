@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>PipeCalc v7.2 사용 설명서</title>
+<style>
+:root{--bg:#0f0c08;--bg2:#0a0804;--card:#1a1410;--card2:#221a12;--line:rgba(255,180,80,.14);--txt:#f0e8dc;--txt2:#c8b69d;--txt3:#88765f;--orange:#f97316;--warn:#fbbf24;--red:#ef4444;--green:#22c55e}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',Arial,sans-serif;line-height:1.7;padding-bottom:calc(92px + env(safe-area-inset-bottom))}.wrap{max-width:980px;margin:0 auto}.hdr{position:sticky;top:0;z-index:20;background:rgba(10,8,4,.96);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:12px 14px;display:flex;align-items:center;justify-content:space-between}.hdr b{font-size:17px}.hdr small{display:block;color:var(--txt3);font-size:10px}.back{min-height:44px;padding:0 13px;border-radius:10px;border:1px solid rgba(249,115,22,.45);background:rgba(249,115,22,.1);color:#fb923c;text-decoration:none;display:flex;align-items:center;font-weight:700;font-size:13px}.body{padding:16px 14px}.hero{padding:18px 15px;background:linear-gradient(145deg,rgba(249,115,22,.13),rgba(34,26,18,.75));border:1px solid rgba(249,115,22,.28);border-radius:15px;margin-bottom:14px}.hero h1{font-size:23px;line-height:1.35;margin:0 0 8px}.hero p{color:var(--txt2);font-size:13px;margin:0}.toc{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px}.toc a{min-height:48px;border-radius:10px;background:var(--card);border:1px solid var(--line);color:var(--txt2);text-decoration:none;padding:10px 12px;font-size:12px;display:flex;align-items:center}.section{scroll-margin-top:76px;margin:0 0 16px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px}.section h2{font-size:18px;margin:0 0 10px;color:#fdba74}.section h3{font-size:14px;margin:17px 0 7px;color:var(--txt)}.section p,.section li{font-size:12px;color:var(--txt2)}.section ul,.section ol{padding-left:20px;margin:8px 0}.table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--line)}table{width:100%;border-collapse:collapse;min-width:560px;background:var(--bg2)}th,td{padding:9px 10px;border-bottom:1px solid var(--line);font-size:11px;text-align:left;vertical-align:top}th{color:#fdba74;background:var(--card2)}td{color:var(--txt2)}tr:last-child td{border-bottom:none}.badge{display:inline-block;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:800}.pass{color:var(--green);background:rgba(34,197,94,.12)}.fail{color:#fca5a5;background:rgba(239,68,68,.12)}.caution,.hold{color:var(--warn);background:rgba(245,158,11,.12)}.reference{color:#93c5fd;background:rgba(59,130,246,.12)}.notice{padding:11px 12px;border-radius:10px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.28);color:#fbbf6b;font-size:11px;margin:10px 0;line-height:1.65}.danger{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.32);color:#fca5a5}.info{background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.28);color:#93c5fd}.flow{display:grid;gap:7px}.step{display:grid;grid-template-columns:32px 1fr;gap:9px;align-items:start;padding:9px;border-radius:10px;background:var(--bg2)}.num{width:32px;height:32px;border-radius:9px;background:var(--orange);color:white;display:flex;align-items:center;justify-content:center;font-weight:800}.step b{font-size:12px}.step span{display:block;color:var(--txt3);font-size:11px;margin-top:2px}.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(980px,100%);padding:9px 12px calc(9px + env(safe-area-inset-bottom));background:rgba(10,8,4,.97);border-top:1px solid var(--line)}.bottom a{min-height:54px;border-radius:12px;background:var(--orange);color:white;text-decoration:none;display:flex;align-items:center;justify-content:center;font-weight:800}.code{font-family:'SFMono-Regular',Consolas,monospace;color:#fdba74}.eq{font-family:'SFMono-Regular',Consolas,monospace;background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:10px 12px;color:#fdba74;font-size:12px;overflow-x:auto}.source a{color:#fdba74;word-break:break-all}@media(min-width:820px){.body{padding:24px}.section{padding:22px}.toc{grid-template-columns:repeat(4,1fr)}.hero{padding:24px}.hero h1{font-size:28px}}@media(max-width:420px){.toc{grid-template-columns:1fr}.body{padding-left:10px;padding-right:10px}.section{padding:13px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="hdr"><div><b>PipeCalc v7.2 사용 설명서</b><small>IF97 단상 + H₂O 2상 + 제한적 Gas-Liquid</small></div><a class="back" href="index.html">계산 앱</a></header>
+<main class="body">
+<section class="hero"><h1>단상은 적합성을 판정하고,<br>두 종류의 2상 모드는 참고값과 중단경계를 보여줍니다</h1><p>PipeCalc는 모바일 현장 입력을 유지하면서 PC에서는 운전조건과 배관조건을 두 열로 분리합니다. 단상은 PASS/FAIL/CAUTION/HOLD, 순수 H₂O 및 제한적 Gas-Liquid는 REFERENCE/HOLD로 표시합니다.</p></section>
+<nav class="toc">
+<a href="#purpose">어디에 사용하는가</a><a href="#quick">빠른 사용 순서</a><a href="#input">입력값 이해하기</a><a href="#principle">계산 작동 원리</a><a href="#result">결과 해석하기</a><a href="#property">물성 계산과 직접입력</a><a href="#phase">상변화·임계조건</a><a href="#practice">실무 사용 시 주의사항</a>
+</nav>
+
+<section class="section" id="purpose"><h2>1. 어디에 사용하는가</h2>
+<div class="table-wrap"><table><thead><tr><th>적합한 사용</th><th>별도 전문 검토가 필요한 사용</th></tr></thead><tbody>
+<tr><td>신규 배관 Size 후보 비교</td><td>다성분·비평형·Slugging을 포함한 상세 2상 설계</td></tr>
+<tr><td>기존 배관의 유량 증가 가능성 확인</td><td>열전달과 비평형이 결합된 실제 Flash·응축·비등 라인</td></tr>
+<tr><td>설계 계산서의 유속·압력강하 개략 검산</td><td>분기·병렬 배관망, 다수 사용처가 연결된 Network</td></tr>
+<tr><td>회의·현장에서 빠른 배관 적합성 확인</td><td>펌프·압축기 성능, Control Valve, Relief·Flare Sizing</td></tr>
+<tr><td>배관 Size 변경에 따른 영향 비교</td><td>수격, 진동, 소음, 배관응력, 재질·부식 적합성</td></tr>
+<tr><td>물성을 알고 있는 비반응 Gas-Liquid 수평 직선관의 민감도 비교</td><td>기액평형·Flash·용해·반응 또는 유동양식·Slugging이 중요한 라인</td></tr>
+</tbody></table></div>
+<div class="notice">PipeCalc 결과는 FIELD/FEED 단계의 1차 판단용입니다. PASS가 상세설계 승인이나 안전성 보증을 의미하지는 않습니다.</div>
+</section>
+
+<section class="section" id="quick"><h2>2. 빠른 사용 순서</h2><div class="flow">
+<div class="step"><div class="num">1</div><div><b>기체·액체·기액 2Φ 선택</b><span>유체의 실제 운전 상태를 선택합니다. 2Φ는 단상과 다른 입력 및 판정규칙을 사용합니다.</span></div></div>
+<div class="step"><div class="num">2</div><div><b>유체 선택</b><span>NG, Steam, N₂, Water, EDC, VCM, NaOH 등 목록에서 선택합니다. 지원되지 않는 액체는 밀도와 점도를 직접 입력할 수 있습니다.</span></div></div>
+<div class="step"><div class="num">2A</div><div><b>Water/Steam이면 계산 모드 선택</b><span>단상 P,T 또는 순수 H₂O 2상 P,x / P,h를 선택합니다. 2상 모드는 유량을 kg/h로 고정합니다.</span></div></div>
+<div class="step"><div class="num">2B</div><div><b>Gas-Liquid이면 양상 물성 입력</b><span>기상 질량분율과 입구조건의 액상·기상 밀도 및 점도를 직접 입력합니다. Air-Water 버튼은 검증 예시일 뿐 실제 공정 기본값이 아닙니다.</span></div></div>
+<div class="step"><div class="num">3</div><div><b>유량·압력·온도 입력</b><span>압력은 barg입니다. 기체의 Nm³/h와 실제 m³/h는 의미가 다르므로 반드시 구분합니다.</span></div></div>
+<div class="step"><div class="num">4</div><div><b>NPS·Schedule·재질 선택</b><span>앱은 배관 외경과 벽두께로 내경을 계산합니다. 재질은 관내 거칠기인 절대조도 ε에 반영됩니다.</span></div></div>
+<div class="step"><div class="num">5</div><div><b>길이·고도차·부속 여유 입력</b><span>상향 배관은 고도차를 +로 입력합니다. 엘보·밸브 등의 손실은 부속 여유율로 간단히 반영합니다.</span></div></div>
+<div class="step"><div class="num">6</div><div><b>판정 기준 확인 후 계산</b><span>일반 배관, 펌프 전단, 냉각수, 공용 헤더 또는 사용자 정의 기준을 선택합니다.</span></div></div>
+<div class="step"><div class="num">7</div><div><b>하단 결과를 눌러 상세값 확인</b><span>Reynolds 수, 마찰계수, 밀도, 점도, Z, 내경, 출구압력과 경고 사유를 확인합니다.</span></div></div>
+</div></section>
+
+<section class="section" id="input"><h2>3. 입력값 이해하기</h2>
+<div class="table-wrap"><table><thead><tr><th>입력값</th><th>앱에서의 의미</th><th>자주 발생하는 실수</th></tr></thead><tbody>
+<tr><td>입구압력</td><td>게이지압 <b>barg</b>로 입력합니다. 앱 내부에서는 절대압으로 변환합니다.</td><td>bara 값을 barg 칸에 그대로 입력하면 밀도와 압력강하가 잘못됩니다.</td></tr>
+<tr><td>기체 Nm³/h</td><td>0℃, 1 atm 기준의 정상체적유량입니다. 앱이 질량유량으로 환산합니다.</td><td>운전조건의 실제 m³/h와 혼동하지 마십시오.</td></tr>
+<tr><td>기체 m³/h</td><td>입구 압력·온도 조건에서의 실제체적유량입니다.</td><td>Normal Flow를 실제체적유량으로 입력하면 유량이 크게 달라집니다.</td></tr>
+<tr><td>액체 m³/h</td><td>운전 유체의 체적유량입니다.</td><td>질량유량을 잘못 입력하지 않도록 단위를 확인합니다.</td></tr>
+<tr><td>액체 kg/h</td><td>밀도를 이용해 체적유량으로 바꿉니다.</td><td>밀도가 부정확하면 유속과 압력강하도 영향을 받습니다.</td></tr>
+<tr><td>2상 kg/h</td><td>순수 H₂O 또는 Gas-Liquid 혼합물의 총 질량유량입니다.</td><td>2상 모드에는 m³/h 또는 Nm³/h를 입력할 수 없습니다.</td></tr>
+<tr><td>증기품질 x</td><td>총 질량 중 증기 질량분율입니다. 화면에는 wt% vapor로 입력합니다.</td><td>Void Fraction α와 다릅니다. x=20%라도 증기가 차지하는 체적은 훨씬 클 수 있습니다.</td></tr>
+<tr><td>비엔탈피 h</td><td>P,h 모드에서 kJ/kg로 입력하며 IF97 hf·hg로 x를 계산합니다.</td><td>h가 hf~hg 밖이면 입구가 2상이 아니므로 HOLD입니다.</td></tr>
+<tr><td>기상 질량분율 xg</td><td>Gas-Liquid 총 질량 중 기상 질량의 비율입니다.</td><td>Void Fraction 또는 체적유량비와 혼동하면 안 됩니다.</td></tr>
+<tr><td>ρL·μL·ρG·μG</td><td>Gas-Liquid 양상의 입구 운전조건 밀도와 점도입니다. 화면 점도 단위는 mPa·s입니다.</td><td>정상상태·다른 압력의 기상밀도 또는 Pa·s 값을 mPa·s로 잘못 입력하지 마십시오.</td></tr>
+<tr><td>길이</td><td>직관 길이입니다. 부속 여유율을 더해 유효길이를 계산합니다.</td><td>실제 배관 Route 길이보다 짧게 입력하지 않도록 주의합니다.</td></tr>
+<tr><td>고도차 Δz</td><td>출구 높이 − 입구 높이입니다. 상향은 +, 하향은 −입니다.</td><td>부호를 반대로 입력하면 출구압력 방향이 반대로 계산됩니다.</td></tr>
+<tr><td>NPS·Schedule</td><td>외경과 벽두께를 선택하여 실제 내경을 정합니다.</td><td>NPS 숫자를 내경으로 생각하면 안 됩니다.</td></tr>
+<tr><td>재질</td><td>관내 거칠기 ε를 선택합니다.</td><td>오래 사용한 탄소강 배관에 신관 조도를 적용하면 손실을 낮게 볼 수 있습니다.</td></tr>
+</tbody></table></div>
+<h3>배관 치수 적용 범위</h3>
+<p>앱의 치수 데이터는 <b>ASME B36.10-2022</b> 기준입니다. 재질을 스테인리스로 선택해도 치수는 B36.10을 사용하고 조도만 바뀝니다. ASME B36.19M의 Schedule 5S·10S·40S·80S가 필요한 경우에는 실제 배관 내경을 별도로 확인해야 합니다.</p>
+</section>
+
+<section class="section" id="principle"><h2>4. 계산 작동 원리</h2>
+<h3>4.1 배관 내경과 유속</h3>
+<p>배관 외경(OD)에서 벽두께 두 배를 빼서 내경(ID)을 구하고, 내경으로 유로 단면적을 계산합니다.</p>
+<div class="eq">ID = OD − 2 × Wall Thickness<br>A = πD² / 4<br>V = Q / A</div>
+<p>같은 유량에서 내경이 작아지면 유속이 증가합니다. 압력강하는 유속의 제곱에 크게 영향을 받으므로, 배관 Size가 한 단계만 달라져도 결과 차이가 크게 날 수 있습니다.</p>
+
+<h3>4.2 Reynolds 수와 마찰계수</h3>
+<div class="eq">Re = ρVD / μ</div>
+<p>Reynolds 수(Re)는 유동이 점성의 영향을 많이 받는지, 관성의 영향을 많이 받는지를 나타냅니다. 앱은 Re와 상대조도 ε/D를 이용해 Darcy 마찰계수 f를 계산합니다.</p>
+<div class="table-wrap"><table><thead><tr><th>Reynolds 수</th><th>유동 특성</th><th>앱 처리</th></tr></thead><tbody>
+<tr><td>Re &lt; 2,300</td><td>층류(Laminar)</td><td><span class="code">f = 64/Re</span></td></tr>
+<tr><td>약 2,300~4,000</td><td>천이영역(Transition)</td><td>계산은 수행하지만 결과 신뢰도를 낮게 표시</td></tr>
+<tr><td>Re가 충분히 큼</td><td>난류(Turbulent)</td><td>Colebrook–White 식으로 f 반복계산</td></tr>
+</tbody></table></div>
+<p><b>주의:</b> Re가 10⁵ 이상이라고 항상 완전조도 난류(Fully Rough)인 것은 아닙니다. 완전조도 상태는 Re뿐 아니라 상대조도 ε/D에도 좌우됩니다.</p>
+
+<h3>4.3 액체 압력강하</h3>
+<div class="eq">ΔP<sub>friction</sub> = f(L/D)(ρV²/2)<br>ΔP<sub>static</sub> = ρgΔz<br>ΔP<sub>total</sub> = ΔP<sub>friction</sub> + ΔP<sub>static</sub></div>
+<p>액체는 밀도 변화가 작다고 보고 Darcy–Weisbach 식을 사용합니다. 상향 배관에서는 정수두가 추가되고, 하향 배관에서는 정수두가 압력 회복 방향으로 작용합니다.</p>
+
+<h3>4.4 일반 기체 압력강하</h3>
+<div class="eq">P₁² − P₂² = f(L/D)G²ZR<sub>s</sub>T</div>
+<p>NG, N₂, Air, H₂, CO₂, EDC·VCM·Cl₂ 증기 등은 압력이 떨어질 때 Z, 밀도, 점도를 다시 계산하며 기존 등온 P² 적분을 사용합니다. Steam은 이 식을 사용하지 않습니다.</p>
+
+<h3>4.5 Water·Steam 전용 계산</h3>
+<p>Water, Steam, Cooling Water는 IAPWS-IF97로 각 구간의 밀도, 엔탈피, 열용량, 음속, 등온압축률을 구하고 IAPWS 2008 식으로 점도를 계산합니다. 배관은 최소 40구간으로 나누며 압력 또는 밀도 변화가 큰 구간은 자동으로 더 잘게 나눕니다.</p>
+<div class="eq">dP/dx = −[ fG²/(2ρD) + ρg(dz/dx) ] / [ 1 − G²κ<sub>T</sub>/ρ ]</div>
+<div class="table-wrap"><table><thead><tr><th>항</th><th>뜻</th><th>실무 해석</th></tr></thead><tbody>
+<tr><td>fG²/(2ρD)</td><td>마찰 압력구배</td><td>배관이 작고 질량유속이 클수록 커집니다.</td></tr>
+<tr><td>ρg(dz/dx)</td><td>고도에 의한 압력구배</td><td>상향은 압력손실, 하향은 압력회복 방향입니다.</td></tr>
+<tr><td>κ<sub>T</sub></td><td>등온압축률(Isothermal Compressibility)</td><td>압력 변화에 따라 밀도가 얼마나 변하는지를 나타냅니다.</td></tr>
+<tr><td>1−G²κ<sub>T</sub>/ρ</td><td>압축성 가속 보정</td><td>0에 접근하면 등온 단상 정상해를 계속 계산할 수 없어 HOLD입니다.</td></tr>
+</tbody></table></div>
+<div class="notice info">단상 기체와 Water·Steam 계산은 등온(Isothermal) 가정입니다. 2상 모드는 별도로 등엔탈피(Isenthalpic) HEM을 적용합니다. 실제 열손실, 응축·비등 속도, 유동양식이 중요한 경우에는 전용 다상유동 도구로 재검토해야 합니다.</div>
+
+<h3>4.6 순수 Water/Steam 2상 참고 계산</h3>
+<p>2상 모드는 순수 H₂O가 포화액과 포화증기로 평형을 이룬다고 가정합니다. 입구 압력과 품질 x를 입력하거나, 입구 압력과 비엔탈피 h를 입력하여 품질을 계산합니다.</p>
+<div class="eq">x = (h − h<sub>f</sub>) / (h<sub>g</sub> − h<sub>f</sub>)<br>v<sub>m</sub> = (1−x)/ρ<sub>f</sub> + x/ρ<sub>g</sub><br>ρ<sub>m</sub> = 1/v<sub>m</sub><br>α = (x/ρ<sub>g</sub>) / v<sub>m</sub></div>
+<div class="table-wrap"><table><thead><tr><th>전문용어</th><th>상세 설명</th><th>예시</th></tr></thead><tbody>
+<tr><td>HEM<br>Homogeneous Equilibrium Model</td><td>액체와 증기가 같은 속도로 흐르고 압력·온도 평형을 즉시 이룬다고 보는 모델입니다. 상간 Slip과 실제 유동양식은 무시합니다.</td><td>x=20%여도 낮은 증기밀도 때문에 Void Fraction α는 매우 클 수 있습니다.</td></tr>
+<tr><td>Slip</td><td>증기와 액체의 실제 평균속도가 서로 다른 현상입니다. HEM은 Slip ratio=1로 가정합니다.</td><td>층상류·환상류에서는 증기가 액체보다 빠르게 움직일 수 있습니다.</td></tr>
+<tr><td>Lockhart–Martinelli/Chisholm</td><td>액상 단독·기상 단독의 마찰구배를 계산한 뒤 2상 마찰승수를 적용하는 분리유동 상관식입니다.</td><td>앱은 HEM 마찰손실과 비교해 민감도를 표시합니다.</td></tr>
+<tr><td>Void Fraction α</td><td>배관 단면 또는 체적에서 증기가 차지하는 비율입니다. 질량분율 x와 다릅니다.</td><td>x=10%가 α=10%라는 뜻은 아닙니다.</td></tr>
+</tbody></table></div>
+<p>HEM 가속항은 등엔탈피 상태에서 혼합비체적의 압력 미분으로 계산합니다.</p>
+<div class="eq">dP/dL = −[ fG²/(2ρ<sub>m</sub>D) + ρ<sub>m</sub>g(dz/dL) ] / [ 1 + G²(∂v<sub>m</sub>/∂P)<sub>h</sub> ]</div>
+<p>Lockhart–Martinelli/Chisholm은 마찰항만 비교합니다. 두 마찰손실의 상대차가 30%를 넘으면 PipeCalc가 결과를 채택하지 않고 HOLD합니다.</p>
+<div class="notice danger">2상 기능의 ±30~50%는 통계적 신뢰구간이 아니라 제품 내부의 보수적 참고 Band입니다. REFERENCE도 상세설계 승인값이 아닙니다.</div>
+
+<h3>4.7 제한적 Gas-Liquid 참고 계산</h3>
+<p>v7.2 Gas-Liquid 모드는 사용자가 입구조건의 양상 물성을 알고 있고, 배관 중 상변화·반응·용해가 없다고 보는 등온 2성분 흐름만 다룹니다. 기상 질량분율은 배관 전체에서 고정하며, 기상밀도만 고정 Z 등온 근사로 압력에 비례하여 갱신합니다.</p>
+<div class="eq">ρ<sub>G</sub>(P) = ρ<sub>G,1</sub>(P/P₁)<br>v<sub>m</sub> = (1−x<sub>g</sub>)/ρ<sub>L</sub> + x<sub>g</sub>/ρ<sub>G</sub>(P)<br>α = (x<sub>g</sub>/ρ<sub>G</sub>) / v<sub>m</sub></div>
+<p>마찰손실의 주 계산은 분리유동 상관식인 Lockhart–Martinelli/Chisholm을 사용합니다. HEM은 No-slip 민감도 비교값으로만 사용합니다.</p>
+<div class="eq">X² = (dP/dL)<sub>L</sub> / (dP/dL)<sub>G</sub><br>φ<sub>L</sub>² = 1 + C/X + 1/X²<br>(dP/dL)<sub>LM</sub> = φ<sub>L</sub>²(dP/dL)<sub>L</sub></div>
+<div class="table-wrap"><table><thead><tr><th>전문용어</th><th>상세 설명</th><th>예시</th></tr></thead><tbody>
+<tr><td>Superficial Velocity<br>표면유속 jL, jG</td><td>각 상이 배관 전체 단면을 단독으로 흐른다고 가정해 계산한 속도입니다. 두 값의 합이 HEM No-slip 혼합유속입니다.</td><td>jG가 2 m/s라고 해서 실제 기상 평균속도가 정확히 2 m/s라는 뜻은 아닙니다.</td></tr>
+<tr><td>Liquid Hold-up</td><td>특정 배관 구간에서 액체가 실제로 차지하는 체적분율입니다. 경사와 유동양식에 따라 No-slip Void Fraction과 달라집니다.</td><td>층상류에서는 액체가 하부에 쌓여 실제 Hold-up이 HEM 예측과 다를 수 있습니다.</td></tr>
+<tr><td>Fixed-Z Isothermal</td><td>온도와 기체 압축계수 Z가 일정하다고 보고 기상밀도를 압력에 비례시킵니다.</td><td>총 ΔP가 입구 절대압력의 10%를 넘으면 이 근사의 영향이 커져 HOLD합니다.</td></tr>
+</tbody></table></div>
+<div class="notice danger">Gas-Liquid 모드는 VLE, Dew/Bubble, Flash, 실제 Flow Regime, Slugging 및 Hold-up을 계산하지 않습니다. 입력한 ρ·μ가 틀리면 결과도 그대로 틀리므로, Simulator 또는 실측 물성과 대조해야 합니다.</div>
+</section>
+
+<section class="section" id="result"><h2>5. 결과 해석하기</h2>
+<div class="table-wrap"><table><thead><tr><th>판정</th><th>의미</th><th>권장 조치</th></tr></thead><tbody>
+<tr><td><span class="badge pass">PASS</span></td><td>현재 설정된 유속·압력강하·Mach·최소 출구압 기준을 모두 만족</td><td>상세 계산값과 예상 계산 범위를 함께 확인</td></tr>
+<tr><td><span class="badge fail">FAIL</span></td><td>하나 이상의 설정 기준을 초과</td><td>배관 Size 확대, 유량 조정, 길이·부속·최소 요구압 재검토</td></tr>
+<tr><td><span class="badge caution">CAUTION</span></td><td>계산은 완료됐지만 물성 신뢰도나 적용범위 때문에 추가 확인 필요</td><td>실제 물성값 입력 또는 전용 프로그램으로 검증</td></tr>
+<tr><td><span class="badge reference">REFERENCE</span></td><td>순수 H₂O 또는 제한적 Gas-Liquid 계산이 정상 종료되고 비교모델 마찰 편차가 30% 이하</td><td>참고값으로만 사용하고 유동양식·Slip·Hold-up·열손실을 포함한 상세검증 수행</td></tr>
+<tr><td><span class="badge hold">HOLD</span></td><td>상태 선택 불일치, Product Guard·임계조건·모델 편차 기준 초과</td><td>전체 결과 채택 금지. 입력·모델 범위를 재검토하고 필요 시 전용툴 해석 수행</td></tr>
+</tbody></table></div>
+
+<h3>주요 출력값</h3>
+<div class="table-wrap"><table><thead><tr><th>출력값</th><th>의미</th></tr></thead><tbody>
+<tr><td>Velocity</td><td>액체는 평균 유속, 기체는 배관을 따라 계산된 최대 유속입니다.</td></tr>
+<tr><td>ΔP / 100m</td><td>마찰에 의한 압력강하를 100m 기준으로 환산한 값입니다. 고도차에 의한 정수두는 제외됩니다.</td></tr>
+<tr><td>Outlet Pressure</td><td>마찰손실과 고도차를 반영한 예상 출구 게이지압입니다.</td></tr>
+<tr><td>Mach Number</td><td>기체 유속을 음속으로 나눈 값입니다. 소음·진동·압축성 영향 판단에 사용합니다.</td></tr>
+<tr><td>Reynolds Number</td><td>층류·천이·난류 상태를 판단하는 무차원 수입니다.</td></tr>
+<tr><td>Friction Factor</td><td>배관 마찰손실을 결정하는 Darcy 마찰계수입니다.</td></tr>
+<tr><td>jL / jG</td><td>Gas-Liquid 각 상의 표면유속입니다. 실제 상별 속도나 실제 Hold-up과 동일하지 않습니다.</td></tr>
+<tr><td>예상 계산오차</td><td>통계적으로 보증된 확률 범위가 아닙니다. 물성자료의 신뢰도, Z 모델 간 차이, 적용 온도범위, 상변화 접근 여부 등을 반영해 넓게 잡은 <b>1차 검토용 참고 범위</b>입니다.</td></tr>
+</tbody></table></div>
+<div class="notice">예: 계산 ΔP가 0.50 bar이고 예상 계산오차가 ±20%라면, 앱은 0.40~0.60 bar를 참고 범위로 보여줍니다. 실제값이 이 범위에 들어올 확률이 95%라는 의미는 아닙니다.</div>
+<p>입력값이나 배관 조건을 변경하면 이전 결과는 자동으로 삭제됩니다. 변경된 조건에서는 반드시 다시 계산하십시오.</p>
+
+<h3>판정 기준 프로파일</h3>
+<p>일반 배관, 펌프 전단, 냉각수, 공용 헤더, 사용자 정의 기준을 저장할 수 있습니다. 기본값은 법규나 국제표준이 아니라 예시값이므로, 실제 사용 전 사내 Design Criteria에 맞게 수정해야 합니다.</p>
+</section>
+
+<section class="section" id="property"><h2>6. 물성 계산과 직접입력</h2>
+<p>압력강하는 밀도 ρ, 점도 μ, 기체 압축계수 Z에 영향을 받습니다. 앱은 유체와 운전조건에 따라 물성을 자동 추정하지만, 공정 Simulator·공급사 Data Sheet·분석값이 있다면 직접 입력값을 우선 사용하는 것이 좋습니다.</p>
+<div class="table-wrap"><table><thead><tr><th>유체</th><th>앱의 물성 처리</th><th>사용 시 주의사항</th></tr></thead><tbody>
+<tr><td>NG·LNG BOG</td><td>DAK 또는 Peng–Robinson으로 Z 계산, Lee–Gonzalez–Eakin으로 점도 추정</td><td>조성이 없으므로 Dew Point와 Bubble Point는 계산하지 못합니다.</td></tr>
+<tr><td>N₂·Air·H₂·CO₂·에틸렌·프로필렌</td><td>Pitzer 또는 Peng–Robinson 자동 선택</td><td>임계점 근처에서는 물성이 급변할 수 있습니다.</td></tr>
+<tr><td>Steam</td><td>IAPWS-IF97 Region 1~5, IAPWS 2008 점도, 구간별 등온 압축성 Darcy 적분</td><td>열손실과 응축수 발생은 미반영입니다. 포화선 도달, 상태 불일치, 900℃ 초과 조건은 HOLD입니다.</td></tr>
+<tr><td>Water</td><td>IAPWS-IF97 밀도·엔탈피·음속·등온압축률, IAPWS 2008 점도</td><td>배관 중 압력이 포화압력 이하로 내려가면 Flash로 보고 전체 길이 결과를 표시하지 않습니다.</td></tr>
+<tr><td>Cooling Water</td><td>순수 물 기준 IAPWS-IF97</td><td>일반 CW는 조성 미반영 안내만 표시하며 이것만으로 CAUTION이 되지는 않습니다. Glycol·고염수·고농도 약품 첨가 시 실제 ρ·μ를 입력하거나 전용 물성으로 검증하십시오.</td></tr>
+<tr><td>Water/Steam 2상</td><td>IF97 포화액·포화증기, HEM 혼합물성, IAPWS 표면장력, LM/Chisholm 마찰 비교</td><td>순수 H₂O, 0.1~10 MPa(a), x=0.01~0.99만 지원합니다. 물성 직접입력은 적용하지 않습니다.</td></tr>
+<tr><td>제한적 Gas-Liquid</td><td>사용자 입력 ρL·μL·ρG·μG, LM/Chisholm 주 계산, HEM 민감도, 고정 Z 기상밀도 보정</td><td>기액평형을 계산하지 않습니다. 입력값은 입구 P·T의 양상 물성이어야 하며 결과는 REFERENCE/HOLD만 사용합니다.</td></tr>
+<tr><td>메탄올·에탄올</td><td>NIST 자료를 바탕으로 한 저압 액체 점도식</td><td>고압에서 점도의 압력 의존성은 반영하지 않습니다.</td></tr>
+<tr><td>액체 EDC·VCM·Cl₂</td><td>기준 밀도·점도와 온도보정식</td><td>운전조건의 실제 물성값이 있으면 직접 입력을 권장합니다.</td></tr>
+<tr><td>NaOH 수용액</td><td>농도와 온도 표를 2차원 보간</td><td>20~100℃, 0~50 wt% 밖에서는 가장 가까운 경계값을 사용하고 신뢰도를 낮게 표시합니다.</td></tr>
+<tr><td>기타 액체·액체 암모니아</td><td>밀도와 점도 직접입력</td><td>두 값이 모두 입력되기 전에는 계산하지 않습니다.</td></tr>
+</tbody></table></div>
+
+<h3>기체 밀도 또는 Z를 직접 입력할 때</h3>
+<p>기체 밀도와 Z는 서로 독립적인 값이 아닙니다.</p>
+<div class="eq">ρ = P / (ZR<sub>s</sub>T)<br>Z = P / (ρR<sub>s</sub>T)</div>
+<ul>
+<li>밀도 ρ를 직접 입력하면 앱은 그 밀도에 맞는 유효 Z를 역산하여 압력강하 계산에 사용합니다.</li>
+<li>Z를 직접 입력하면 앱은 그 Z에 맞춰 입구 밀도를 다시 계산합니다.</li>
+<li>비현실적인 Z가 계산되면 단위·소수점·barg/bara 입력 오류 가능성이 높으므로 계산을 중단하거나 CAUTION으로 표시합니다.</li>
+</ul>
+<div class="notice danger">기체 밀도를 직접 입력할 때는 반드시 운전 압력·온도 조건의 밀도인지 확인하십시오. 정상상태 밀도나 다른 압력 조건의 밀도를 입력하면 잘못된 Z가 계산됩니다.</div>
+</section>
+
+<section class="section" id="phase"><h2>7. 포화선·상변화·계산 중단 조건</h2>
+<h3>단상 모드의 Flash·응축 가능성</h3>
+<p>단상 모드는 IF97 포화선과 매 계산 구간의 상태를 대조하며, 포화선에 도달하면 즉시 적분을 중단합니다. 사용자가 2상 모드로 명시적으로 전환해야 2상 참고 계산을 수행합니다.</p>
+<div class="table-wrap"><table><thead><tr><th>조건</th><th>판정</th><th>의미</th></tr></thead><tbody>
+<tr><td>Water 압력이 IF97 Psat 이하</td><td>HOLD</td><td>Flash 가능성. 전체 길이 ΔP와 출구압력을 표시하지 않음</td></tr>
+<tr><td>Steam 상태가 IF97 액체 영역</td><td>HOLD</td><td>선택 상 불일치 또는 응축 상태. 단상 증기 결과 채택 금지</td></tr>
+<tr><td>|T−Tsat| &lt; 2℃</td><td>CAUTION</td><td>작은 온도·압력 오차로 상이 바뀔 수 있음</td></tr>
+<tr><td>정확한 포화선·단상 모드</td><td>HOLD</td><td>P,T만으로 품질 x를 정할 수 없음. P,x 또는 P,h 2상 모드로 전환 필요</td></tr>
+<tr><td>NG·LNG BOG</td><td>판정 제한</td><td>조성이 없어 혼합물 Dew/Bubble Point를 계산하지 못함</td></tr>
+<tr><td>NaOH 수용액</td><td>판정 제외</td><td>농도별 기액평형 자료 미지원</td></tr>
+</tbody></table></div>
+
+<h3>순수 H₂O 2상 모드의 Product Guard</h3>
+<div class="table-wrap"><table><thead><tr><th>조건</th><th>판정</th><th>이유</th></tr></thead><tbody>
+<tr><td>순수 H₂O 아님</td><td>H₂O P,x/P,h 모드 비활성</td><td>IF97 Flash는 순수 물에만 적용하며, 기타 조합은 별도 Gas-Liquid 직접물성 모드를 사용</td></tr>
+<tr><td>압력 &lt;0.1 또는 &gt;10 MPa(a)</td><td>HOLD</td><td>PipeCalc v7.2의 보수적 제품 적용범위 밖</td></tr>
+<tr><td>x &lt;0.01 또는 x &gt;0.99</td><td>HOLD</td><td>단상 경계와 LM 수치 민감도를 피하기 위한 Guard</td></tr>
+<tr><td>HEM/LM 마찰 편차 &gt;30%</td><td>HOLD</td><td>모델 선택에 따라 결론이 크게 달라짐</td></tr>
+<tr><td>1+G²(∂v/∂P)<sub>h</sub> ≤0.05</td><td>HOLD</td><td>HEM 정상해의 임계조건에 접근</td></tr>
+<tr><td>정상 종료·모델 편차 ≤30%</td><td>REFERENCE</td><td>상세검증이 필요한 참고 계산으로만 제공</td></tr>
+</tbody></table></div>
+
+<h3>Gas-Liquid 모드의 Product Guard</h3>
+<div class="table-wrap"><table><thead><tr><th>조건</th><th>판정</th><th>이유</th></tr></thead><tbody>
+<tr><td>xg &lt;0.1 또는 &gt;99.9 wt%</td><td>HOLD</td><td>단상 극한에서 LM 분모가 민감해지는 것을 제한</td></tr>
+<tr><td>ρL/ρG &lt;3</td><td>HOLD</td><td>입력 상태를 서로 구분되는 기액상으로 보기 어려움</td></tr>
+<tr><td>|Δz|/L &gt;0.01</td><td>HOLD</td><td>실제 Liquid Hold-up이 필요한 경사배관을 수평 근사로 계산하지 않음</td></tr>
+<tr><td>LM/HEM 마찰 편차 &gt;30%</td><td>HOLD</td><td>모델 선택에 따라 결론이 크게 달라짐</td></tr>
+<tr><td>총 ΔP/P₁ &gt;10%</td><td>HOLD</td><td>등온·고정 Z 기상밀도 근사의 영향이 커짐</td></tr>
+<tr><td>1+G²(∂v/∂P) ≤0.10</td><td>HOLD</td><td>혼합 압축성 가속항이 임계상태에 접근</td></tr>
+<tr><td>정상 종료·모든 Guard 만족</td><td>REFERENCE</td><td>실험적 참고 계산으로만 제공</td></tr>
+</tbody></table></div>
+
+<h3>등온 모델 임계조건</h3>
+<p>일반 기체는 기존의 등온 임계 Mach 기준을 유지합니다. Steam은 IF97 등온압축률로 계산한 가속항을 사용합니다.</p>
+<div class="table-wrap"><table><thead><tr><th>유체군</th><th>중단 판단</th><th>의미</th></tr></thead><tbody>
+<tr><td>일반 기체</td><td>Ma<sub>iso</sub> = 1/√k 접근</td><td>기존 P² 단상 모델을 계속 적용할 수 없음</td></tr>
+<tr><td>Steam</td><td>G²κ<sub>T</sub>/ρ → 1</td><td>IF97 등온 압축성 정상해의 분모가 0에 접근</td></tr>
+</tbody></table></div>
+<p>두 조건 모두 실제 Choked Flow를 확정하는 상세해석은 아닙니다. Size를 확대하거나 Fanno Flow, Real-Gas 또는 전용 압축성 배관 도구로 검증해야 한다는 중단 신호입니다.</p>
+</section>
+
+<section class="section" id="practice"><h2>8. 실무 사용 시 주의사항</h2>
+<h3>계산 전 확인</h3>
+<ul>
+<li>유체 상태가 실제로 단상인지 확인합니다.</li>
+<li>압력 단위가 barg인지 확인합니다.</li>
+<li>Nm³/h와 운전 m³/h를 구분합니다.</li>
+<li>NPS와 Schedule을 도면·Line List와 대조합니다.</li>
+<li>노후 배관, Scale, 부식이 예상되면 조도를 보수적으로 선택합니다.</li>
+<li>엘보·티·밸브가 많으면 부속 여유율을 높이거나 별도 K값 계산을 수행합니다.</li>
+</ul>
+<h3>결과 확인</h3>
+<ul>
+<li>PASS만 보지 말고 유속, ΔP/100m, 출구압력, Mach를 각각 확인합니다.</li>
+<li>CAUTION이면 실제 밀도·점도·Z를 확보하여 다시 계산합니다.</li>
+<li>REFERENCE이면 HEM 결과를 참고값으로만 사용하고 유동양식·Slip·열손실을 포함한 상세검증을 수행합니다.</li>
+<li>Gas-Liquid REFERENCE이면 입력 물성의 출처와 운전조건을 확인하고, 실제 Hold-up·Flow Regime을 포함하는 전용도구로 교차검증합니다.</li>
+<li>HOLD이면 단상·2상 전체 결과를 설계값으로 사용하지 않습니다.</li>
+<li>펌프 전단은 PipeCalc 결과와 별도로 NPSHa/NPSHr를 검토합니다.</li>
+<li>공용 Header는 동시사용률과 분기별 최소 공급압을 별도로 확인합니다.</li>
+</ul>
+<h3>현재 지원하지 않는 항목</h3>
+<ul>
+<li>다성분 기액평형, Dew/Bubble, Flash 및 비평형 상변화</li>
+<li>유동양식·Slip·실제 Hold-up을 포함한 상세 Two-Phase Pressure Drop</li>
+<li>Slugging, Terrain Slugging, 열손실·응축·비등 속도</li>
+<li>배관망·분기·병렬 Network 해석</li>
+<li>Control Valve Cv 및 펌프·압축기 성능곡선</li>
+<li>Relief·Flare Sizing</li>
+<li>Water Hammer, 배관응력, 진동·소음, Erosion, 재질 적합성</li>
+<li>ASME B36.19M Schedule S 치수</li>
+</ul>
+</section>
+
+<section class="section source"><h2>9. 주요 근거 자료</h2><p>아래 자료는 배관 치수와 주요 물성 모델의 기준을 확인하기 위한 원문입니다. PipeCalc의 일부 보간식과 경고 기준은 현장 1차 검토를 위해 단순화한 내부 계산 방식입니다.</p><ul>
+<li>ASME B36.10-2022: <a href="https://www.asme.org/codes-standards/find-codes-standards/welded-and-seamless-wrought-steel-pipe">Welded and Seamless Wrought Steel Pipe</a></li>
+<li>ASME B36.19M: <a href="https://www.asme.org/codes-standards/find-codes-standards/b36-19m-stainless-steel-pipe">Stainless Steel Pipe</a></li>
+<li>IAPWS: <a href="https://iapws.org/documents/release/IF97-Rev.download">IAPWS-IF97 Industrial Formulation, Region 1~5 및 포화선</a></li>
+<li>IAPWS: <a href="https://iapws.org/documents/release/viscosity.download">IAPWS 2008 Viscosity Formulation</a></li>
+<li>IAPWS: <a href="https://iapws.org/documents/release/Supp-VPT3-2016.download">Region 3 v(p,T) Supplement</a></li>
+<li>IAPWS: <a href="https://iapws.org/documents/release/Surf-H2O">Surface Tension of Ordinary Water Substance</a></li>
+<li>NISTIR 5078: <a href="https://www.nist.gov/system/files/documents/srd/NISTIR5078-Tab3.pdf">Water and Steam Property Table</a></li>
+<li>Lockhart &amp; Martinelli (1949): <a href="https://cir.nii.ac.jp/crid/1573387448899402240">Proposed Correlation of Data for Isothermal Two-Phase, Two-Component Flow in Pipes</a></li>
+<li>Chisholm (1967): <a href="https://doi.org/10.1016/0017-9310(67)90047-6">A theoretical basis for the Lockhart–Martinelli correlation for two-phase flow</a></li>
+<li>NIST: <a href="https://www.nist.gov/document/r0000181pdf">Homogeneous flow의 마찰·운동량·에너지식 적용 연구</a></li>
+<li>NIST Methanol: <a href="https://www.nist.gov/document/jpcrd3520061597pdf">Reference Correlation for the Viscosity of Methanol</a></li>
+<li>NIST Ethanol: <a href="https://www.nist.gov/publications/reference-correlation-viscosity-ethanol-triple-point-620-k-and-102-mpa">Reference Correlation for the Viscosity of Ethanol</a></li>
+<li>NIST WebBook VCM: <a href="https://webbook.nist.gov/cgi/cbook.cgi?ID=C75014&amp;Mask=4&amp;Plot=on&amp;Type=ANTOINE">Vinyl Chloride Antoine Parameters</a></li>
+<li>ATSDR VCM: <a href="https://www.atsdr.cdc.gov/toxprofiles/tp20-c4.pdf">Physical and Chemical Properties of Vinyl Chloride</a></li>
+<li>ATSDR EDC: <a href="https://www.atsdr.cdc.gov/toxprofiles/tp38-c4.pdf">Physical and Chemical Properties of 1,2-Dichloroethane</a></li>
+<li>OxyChem: <a href="https://www.oxychem.com/chlor-alkali/">Caustic Soda Technical Resources</a></li>
+<li>iapws-if97 2.2.0: <a href="https://www.npmjs.com/package/iapws-if97">앱에 내장한 MIT 구현체</a></li>
+</ul></section>
+</main></div>
+<div class="bottom"><a href="index.html">PipeCalc 계산 앱으로 돌아가기</a></div>
+</body></html>

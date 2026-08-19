@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>PipeCalc v7.2 — IF97 단상·H₂O 및 제한적 Gas-Liquid 2상</title>
+<style>
+/* ── 디자인 토큰 ── */
+:root{
+  --bg:#0f0c08; --bg2:#0a0804; --card:#1a1410; --card2:#221a12; --card3:#1e1810;
+  --line:rgba(255,180,80,0.12); --line2:rgba(255,180,80,0.07);
+  --txt:#f0e8dc; --txt2:#b8a48a; --txt3:#7a6a54;
+  --pass:#22c55e; --fail:#ef4444; --info:#f97316; --warn:#fbbf24; --special:#fb923c;
+  --r:13px;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{margin:0; padding:0; background:var(--bg); color:var(--txt);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',Arial,sans-serif; -webkit-font-smoothing:antialiased;}
+body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);}
+.mono{font-family:'SFMono-Regular',Consolas,'Liberation Mono',monospace;}
+.app{max-width:460px; margin:0 auto; min-height:100vh;}
+
+/* ── 헤더 ── */
+.hdr{background:var(--bg2); padding:14px 16px; border-bottom:0.5px solid var(--line2);
+  display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:30;
+  box-shadow:0 1px 0 0 rgba(249,115,22,0.25);}
+.hdr-l{display:flex; align-items:center; gap:8px;}
+.hdr-l b{font-weight:700; font-size:17px;}
+.hdr .ico{color:var(--info); font-size:20px;}
+.hdr-tag{color:var(--txt3); font-size:11px;}
+
+/* ── 요약바 ── */
+.sumbar{background:var(--card); padding:10px 16px; border-bottom:0.5px solid var(--line2);
+  position:sticky; top:49px; z-index:29; font-size:13px;}
+.sumbar .lbl{color:var(--txt3); font-size:11px; margin-right:6px;}
+.sumbar .val{color:var(--txt2);}
+.sumbar .val.on{color:var(--txt);}
+
+/* ── 본문 ── */
+.body{padding:16px;}
+.fld{margin-bottom:14px;}
+.fld>label{color:var(--txt2); font-size:12px; display:block; margin-bottom:6px;}
+.row{display:flex; gap:8px;}
+.row>.fld{flex:1; margin-bottom:0;}
+.row.mb{margin-bottom:14px;}
+
+/* 입력 */
+.inp,.selbtn{width:100%; background:var(--card2); color:var(--txt); border:0.5px solid var(--line);
+  border-radius:9px; min-height:46px; font-size:15px; padding:0 12px;}
+.inp{font-family:'SFMono-Regular',Consolas,'Liberation Mono',monospace;}
+.inwrap{display:flex; align-items:center; background:var(--card2); border:0.5px solid var(--line);
+  border-radius:9px; min-height:46px; padding:0 12px;}
+.inwrap input{flex:1; width:100%; background:transparent; color:var(--txt); border:none; outline:none;
+  font-family:'SFMono-Regular',Consolas,'Liberation Mono',monospace; font-size:15px;}
+.inwrap .u{color:var(--txt3); font-size:12px; margin-left:6px;}
+
+/* 셀렉트 버튼(휠/바텀시트 트리거) */
+.selbtn{display:flex; align-items:center; justify-content:space-between; cursor:pointer; text-align:left;}
+.selbtn span{color:var(--txt);} .selbtn i{color:var(--txt3); font-size:18px;}
+
+/* 토글 */
+.seg{display:flex; gap:6px; background:var(--bg2); border-radius:11px; padding:4px; margin-bottom:16px;}
+.seg button{flex:1; background:transparent; color:var(--txt3); border:none; border-radius:8px;
+  padding:11px; font-size:14px; font-weight:500; min-height:44px; cursor:pointer; font-family:inherit;}
+.seg button.act{background:var(--info); color:#fff;}
+.seg.liq button.act{background:var(--info);}
+
+/* 추정 물성 카드 */
+.estcard{background:var(--card3); border:0.5px solid rgba(249,115,22,0.32); border-radius:11px; padding:13px; margin-bottom:16px;}
+.estcard .top{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+.estcard .top .l{display:flex; align-items:center; gap:6px; color:#fdba74; font-size:12px; font-weight:500;}
+.estcard .top .l i{color:var(--special); font-size:16px;}
+.estcard .badge{color:var(--special); font-size:11px; border:0.5px solid rgba(249,115,22,0.4); border-radius:5px; padding:2px 7px;}
+.estgrid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+.estitem{background:var(--bg2); border-radius:7px; padding:7px 9px;}
+.estitem .k{color:var(--txt3); font-size:10px;}
+.estitem .v{color:var(--txt); font-family:'SFMono-Regular',Consolas,'Liberation Mono',monospace; font-size:13px; margin-top:2px;}
+.estitem.edit{outline:1px solid rgba(249,115,22,0.5);}
+.estitem input{width:100%; background:transparent; border:none; color:var(--special);
+  font-family:'SFMono-Regular',Consolas,'Liberation Mono',monospace; font-size:13px; outline:none; margin-top:2px;}
+
+/* 계산 버튼 */
+.calc{width:100%; background:var(--info); color:#fff; border:none; border-radius:11px;
+  padding:15px; font-size:16px; font-weight:700; min-height:54px; cursor:pointer; font-family:inherit;
+  display:flex; align-items:center; justify-content:center; gap:7px;}
+.calc:active{transform:scale(0.99);}
+
+/* 결과 */
+.result{margin-top:18px;}
+.verdict{border-radius:13px; padding:16px; display:flex; align-items:center; gap:12px; margin-bottom:14px;}
+.verdict.pass{background:rgba(34,197,94,0.12); border:0.5px solid rgba(34,197,94,0.4);}
+.verdict.fail{background:rgba(239,68,68,0.12); border:0.5px solid rgba(239,68,68,0.4);}
+.verdict .vi{font-size:34px;} .verdict.pass .vi{color:var(--pass);} .verdict.fail .vi{color:var(--fail);}
+.verdict .vt b{font-size:20px; font-weight:700;} .verdict.pass .vt b{color:var(--pass);} .verdict.fail .vt b{color:var(--fail);}
+.verdict .vt div{color:var(--txt2); font-size:12px; margin-top:2px;}
+
+.metrics{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;}
+.metric{background:var(--card); border-radius:10px; padding:12px;}
+.metric .mk{color:var(--txt3); font-size:11px;}
+.metric .mv{font-family:'SFMono-Regular',Consolas,'Liberation Mono',monospace; font-size:19px; margin-top:3px;}
+.metric .ma{font-size:10px; margin-top:3px;}
+.metric.ok .mv{color:var(--txt);} .metric.bad .mv{color:var(--fail);} .metric.ok .ma{color:var(--txt3);} .metric.bad .ma{color:var(--fail);}
+
+.detoggle{width:100%; background:var(--card); border:0.5px solid var(--line); color:var(--txt2);
+  border-radius:9px; padding:11px; font-size:13px; cursor:pointer; font-family:inherit; margin-bottom:10px;}
+.details{background:var(--card); border-radius:10px; padding:13px; display:none;}
+.details.show{display:block;}
+.details .dl{display:flex; justify-content:space-between; padding:5px 0; border-bottom:0.5px solid var(--line2); font-size:13px;}
+.details .dl:last-child{border:none;}
+.details .dl .dk{color:var(--txt3);} .details .dl .dv{font-family:'SFMono-Regular',Consolas,'Liberation Mono',monospace;}
+
+.disclaimer{margin-top:14px; padding:11px 13px; background:rgba(245,158,11,0.08);
+  border:0.5px solid rgba(245,158,11,0.25); border-radius:9px; color:#fbbf6b; font-size:11px; line-height:1.6;}
+
+/* ── 휠 피커 ── */
+.scrim{position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:50; display:none; align-items:flex-end;}
+.scrim.show{display:flex;}
+.sheet{width:100%; max-width:460px; margin:0 auto; background:var(--card); border-radius:18px 18px 0 0;
+  padding:8px 0 calc(8px + env(safe-area-inset-bottom));}
+.sheet-hd{display:flex; align-items:center; justify-content:space-between; padding:10px 16px; border-bottom:0.5px solid var(--line2);}
+.sheet-hd b{font-size:15px;} .sheet-hd button{background:none; border:none; color:var(--info); font-size:15px; font-weight:700; font-family:inherit;}
+.sheet-hd .cancel{color:var(--txt3); font-weight:400;}
+
+.wheel{position:relative; height:220px; overflow:hidden; -webkit-mask-image:linear-gradient(transparent,#000 25%,#000 75%,transparent);
+  mask-image:linear-gradient(transparent,#000 25%,#000 75%,transparent);}
+.wheel .sel{position:absolute; left:14px; right:14px; top:88px; height:44px; border-top:0.5px solid var(--line);
+  border-bottom:0.5px solid var(--line); pointer-events:none;}
+.wheel ul{list-style:none; margin:0; padding:88px 0; touch-action:none;}
+.wheel li{height:44px; line-height:44px; text-align:center; font-size:17px; color:var(--txt2);
+  font-family:'SFMono-Regular',Consolas,'Liberation Mono',monospace; transition:color .1s;}
+.wheel li.center{color:var(--txt); font-weight:500;}
+
+/* ── 바텀시트 검색 ── */
+.searchwrap{padding:12px 16px;}
+.searchwrap input{width:100%; background:var(--card2); border:0.5px solid var(--line); border-radius:9px;
+  min-height:44px; padding:0 12px; color:var(--txt); font-size:15px; font-family:inherit; outline:none;}
+.flist{max-height:46vh; overflow-y:auto; padding:0 8px 8px;}
+.flist .fitem{display:flex; align-items:center; justify-content:space-between; padding:13px 12px;
+  border-radius:9px; cursor:pointer; min-height:48px;}
+.flist .fitem:active{background:var(--card2);}
+.flist .fitem .fn{font-size:15px;} .flist .fitem .ft{color:var(--txt3); font-size:11px;}
+.flist .fitem.sel .fn{color:var(--info); font-weight:500;}
+.flist .nores{padding:24px; text-align:center; color:var(--txt3); font-size:13px; line-height:1.6;}
+
+/* ── 압력 프리셋 칩 ── */
+.presets{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:7px;}
+.preset-chip{background:var(--card2); border:0.5px solid var(--line); color:var(--txt2);
+  border-radius:7px; padding:6px 10px; font-size:12px; cursor:pointer; font-family:inherit;
+  min-height:32px; display:flex; align-items:center; gap:4px; white-space:nowrap;}
+.preset-chip:active{transform:scale(0.96);}
+.preset-chip.on{background:rgba(249,115,22,0.14); border-color:rgba(249,115,22,0.5); color:var(--special);}
+.preset-chip .pv{font-family:'SFMono-Regular',Consolas,'Liberation Mono',monospace; color:var(--txt3); font-size:11px;}
+.preset-chip.on .pv{color:var(--special);}
+.preset-note{color:var(--txt3); font-size:10px; margin-bottom:7px; line-height:1.5;}
+
+
+/* ── v5 현장판: 신뢰도·상변화·오차범위 ── */
+.verdict.hold{background:rgba(245,158,11,0.12); border:0.5px solid rgba(245,158,11,0.45);}
+.verdict.hold .vi,.verdict.hold .vt b{color:var(--warn);}
+.verdict.caution{background:rgba(249,115,22,0.11); border:0.5px solid rgba(249,115,22,0.42);}
+.verdict.caution .vi,.verdict.caution .vt b{color:var(--special);}
+.verdict.reference{background:rgba(59,130,246,0.11); border:0.5px solid rgba(59,130,246,0.42);}
+.verdict.reference .vi,.verdict.reference .vt b{color:#60a5fa;}
+.metric.info .mv{color:var(--special);}
+.quality{background:var(--card); border-radius:11px; padding:12px; margin-bottom:12px; border:0.5px solid var(--line);}
+.quality .qh{display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px;}
+.quality .qh b{font-size:13px;}
+.qbadge{font-family:'SFMono-Regular',Consolas,'Liberation Mono',monospace; font-size:12px; border-radius:6px; padding:3px 8px; border:0.5px solid currentColor;}
+.qbadge.a{color:var(--pass)} .qbadge.b{color:#84cc16} .qbadge.c{color:var(--warn)} .qbadge.d{color:var(--fail)}
+.qline{font-size:11px; color:var(--txt2); line-height:1.65;}
+.alertbox{border-radius:10px; padding:11px 12px; margin-bottom:12px; font-size:11px; line-height:1.65;}
+.alertbox.info{background:rgba(59,130,246,0.09); border:0.5px solid rgba(59,130,246,0.3); color:#93c5fd;}
+.alertbox.warn{background:rgba(245,158,11,0.09); border:0.5px solid rgba(245,158,11,0.34); color:#fbbf6b;}
+.alertbox.danger{background:rgba(239,68,68,0.10); border:0.5px solid rgba(239,68,68,0.38); color:#fca5a5;}
+.estnote{grid-column:1/3; color:var(--txt3); font-size:10px; margin-top:2px; line-height:1.55;}
+.estnote.warn{color:var(--warn)} .estnote.danger{color:#fca5a5}
+.smallnote{color:var(--txt3); font-size:10px; line-height:1.55; margin-top:6px;}
+.update-card{background:var(--card); border:0.5px solid var(--line); border-radius:10px; padding:10px 12px; margin-bottom:14px; color:var(--txt2); font-size:11px; line-height:1.6;}
+
+
+/* ── v6 모바일 UI / 하단 결과 / 설정 페이지 ── */
+html{overscroll-behavior-y:none;}
+body{padding-bottom:calc(78px + env(safe-area-inset-bottom));}
+.app{min-height:100dvh; padding-bottom:140px;}
+.hdr{min-height:54px; padding:10px 14px;}
+.hdr-actions{display:flex; align-items:center; gap:8px;}
+.iconbtn{width:42px; height:42px; border-radius:10px; border:0.5px solid var(--line); background:var(--card2); color:var(--txt2); font-size:19px; cursor:pointer;}
+.view{display:none;}
+.view.active{display:block;}
+.body{padding:14px 14px 24px;}
+.profilebar{display:grid; grid-template-columns:1fr auto; gap:8px; align-items:end; background:var(--card); border:0.5px solid var(--line); border-radius:12px; padding:11px; margin-bottom:14px;}
+.profilebar .plabel{grid-column:1/3; color:var(--txt3); font-size:10px;}
+.native-select{appearance:none; width:100%; min-height:48px; border:0.5px solid var(--line); border-radius:10px; background:var(--card2); color:var(--txt); padding:0 38px 0 12px; font-size:15px; font-family:inherit; background-image:linear-gradient(45deg,transparent 50%,var(--txt3) 50%),linear-gradient(135deg,var(--txt3) 50%,transparent 50%); background-position:calc(100% - 17px) 20px,calc(100% - 12px) 20px; background-size:5px 5px,5px 5px; background-repeat:no-repeat;}
+.mini-btn,.secondary-btn,.danger-btn{min-height:48px; border-radius:10px; padding:0 14px; font-family:inherit; font-weight:700; cursor:pointer;}
+.mini-btn{border:0.5px solid rgba(249,115,22,.45); color:var(--special); background:rgba(249,115,22,.09);}
+.secondary-btn{width:100%; border:0.5px solid var(--line); color:var(--txt2); background:var(--card2);}
+.danger-btn{width:100%; border:0.5px solid rgba(239,68,68,.35); color:#fca5a5; background:rgba(239,68,68,.08);}
+.fld>label{font-size:12px; margin-bottom:7px;}
+.inp,.selbtn,.inwrap{min-height:50px; border-radius:10px;}
+.inwrap input{font-size:16px; min-height:48px;}
+.seg button{min-height:48px;}
+.calc{min-height:58px; border-radius:13px; font-size:17px; position:relative; z-index:1;}
+.special-input{display:none; background:rgba(249,115,22,.07); border:0.5px solid rgba(249,115,22,.28); border-radius:11px; padding:11px; margin-bottom:14px;}
+.special-input.show{display:block;}
+.conc-chips{display:flex; gap:6px; overflow-x:auto; padding:2px 0 4px; scrollbar-width:none;}
+.conc-chips::-webkit-scrollbar{display:none;}
+.conc-chip{min-width:58px; min-height:38px; border-radius:9px; border:0.5px solid var(--line); background:var(--card2); color:var(--txt2); font-family:inherit;}
+.conc-chip.on{color:var(--special); border-color:rgba(249,115,22,.55); background:rgba(249,115,22,.12);}
+
+/* 결과는 하단 고정 */
+.result-dock{position:fixed; left:50%; transform:translateX(-50%); bottom:calc(70px + env(safe-area-inset-bottom)); width:min(460px,100%); z-index:42; padding:0 10px 8px; display:none; pointer-events:none;}
+.result-dock.show{display:block;}
+.result-dock button{pointer-events:auto; width:100%; min-height:76px; border:none; border-radius:14px; background:rgba(26,20,16,.97); color:var(--txt); box-shadow:0 -8px 30px rgba(0,0,0,.42); border:1px solid var(--line); padding:10px 12px; display:grid; grid-template-columns:auto 1fr auto; gap:10px; align-items:center; text-align:left; font-family:inherit;}
+.dock-status{width:52px; height:52px; border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:800; font-size:11px;}
+.dock-status.pass{background:rgba(34,197,94,.14); color:var(--pass);}
+.dock-status.fail{background:rgba(239,68,68,.14); color:var(--fail);}
+.dock-status.caution,.dock-status.hold{background:rgba(245,158,11,.14); color:var(--warn);}
+.dock-status.reference{background:rgba(59,130,246,.14); color:#60a5fa;}
+.dock-main{min-width:0;}
+.dock-main b{font-size:14px; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.dock-main span{display:block; color:var(--txt2); font-size:11px; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.dock-arrow{font-size:22px; color:var(--special);}
+
+.bottom-nav{position:fixed; left:50%; transform:translateX(-50%); bottom:0; width:min(460px,100%); height:calc(70px + env(safe-area-inset-bottom)); padding:7px 8px env(safe-area-inset-bottom); z-index:45; display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; background:rgba(10,8,4,.97); border-top:0.5px solid var(--line); backdrop-filter:blur(16px);}
+.nav-btn{border:none; border-radius:11px; background:transparent; color:var(--txt3); min-height:54px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; font-family:inherit; font-size:11px; text-decoration:none; cursor:pointer;}
+.nav-btn .ni{font-size:20px; line-height:1;}
+.nav-btn.active{background:rgba(249,115,22,.12); color:var(--special);}
+
+/* 결과 상세 bottom sheet */
+.result-sheet{max-height:92dvh; overflow-y:auto; padding-bottom:calc(18px + env(safe-area-inset-bottom));}
+.result-content{padding:14px;}
+.close-x{min-width:44px; min-height:44px; border:none; background:transparent; color:var(--txt2); font-size:24px;}
+
+/* 설정 */
+.page-title{margin:4px 0 14px;}
+.page-title h2{font-size:20px; margin:0 0 5px;}
+.page-title p{font-size:11px; color:var(--txt3); margin:0; line-height:1.55;}
+.settings-card{background:var(--card); border:0.5px solid var(--line); border-radius:13px; padding:13px; margin-bottom:12px;}
+.settings-card h3{font-size:14px; margin:0 0 10px;}
+.settings-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+.settings-grid .fld{margin:0;}
+.settings-grid .full{grid-column:1/3;}
+.setting-note{font-size:10px; color:var(--txt3); line-height:1.6; margin-top:8px;}
+.button-stack{display:grid; gap:9px; margin:12px 0 22px;}
+.save-btn{width:100%; min-height:56px; border:none; border-radius:12px; background:var(--info); color:white; font-family:inherit; font-size:16px; font-weight:800;}
+.profile-description{padding:10px 12px; border-radius:10px; background:var(--bg2); color:var(--txt2); font-size:11px; line-height:1.55; margin-top:9px;}
+.workspace-grid{display:block;}
+.input-panel{min-width:0;}
+.mode-card{display:none; background:rgba(59,130,246,.07); border:0.5px solid rgba(59,130,246,.30); border-radius:12px; padding:11px; margin-bottom:14px;}
+.mode-card.show{display:block;}
+.mode-card .seg{margin-bottom:9px;}
+.mode-card .seg button{padding:8px 5px; font-size:12px;}
+.two-phase-inputs{display:none; margin-top:10px;}
+.two-phase-inputs.show{display:block;}
+.two-phase-grid{display:grid; grid-template-columns:1fr; gap:10px;}
+.two-phase-grid .fld{margin:0;}
+.gas-liquid-card{display:none; background:rgba(34,197,94,.07); border-color:rgba(34,197,94,.32);}
+.gas-liquid-card.show{display:block;}
+.gas-liquid-grid{display:grid; grid-template-columns:1fr; gap:10px;}
+.gas-liquid-grid .fld{margin:0; min-width:0;}
+.gas-liquid-grid .full{grid-column:1;}
+.sample-btn{width:100%; min-height:40px; margin-top:10px; border:0.5px solid rgba(34,197,94,.40); border-radius:8px; background:rgba(34,197,94,.10); color:#86efac; font:inherit; cursor:pointer;}
+.seg button[data-ph="two-phase"]{min-width:0;}
+.mode-note{color:#93c5fd; font-size:10px; line-height:1.6;}
+.locked{opacity:.48; pointer-events:none;}
+.hidden{display:none!important;}
+.desktop-section-title{display:none;}
+
+@media (max-width:360px){
+  .body{padding-left:10px;padding-right:10px;}
+  .settings-grid{grid-template-columns:1fr;}
+  .settings-grid .full{grid-column:1;}
+  .profilebar{grid-template-columns:1fr;}
+  .profilebar .plabel{grid-column:1;}
+  .mini-btn{width:100%;}
+}
+
+@media (min-width:480px){
+  .gas-liquid-grid{grid-template-columns:1fr 1fr;}
+  .gas-liquid-grid .full{grid-column:1/3;}
+}
+
+@media (min-width:820px){
+  body{padding-bottom:96px; background:linear-gradient(135deg,#0a0804 0%,#15100a 55%,#0f0c08 100%);}
+  .app{max-width:1180px; min-height:100vh; padding-bottom:90px; border-left:0.5px solid var(--line2); border-right:0.5px solid var(--line2); background:rgba(15,12,8,.96);}
+  .hdr{padding:12px 24px; min-height:64px;}
+  .hdr-l b{font-size:20px;}
+  .hdr-tag{font-size:12px;}
+  .body{padding:22px 24px 34px;}
+  .profilebar{grid-template-columns:minmax(280px,1fr) auto; max-width:none; padding:14px 16px;}
+  .workspace-grid{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:20px; align-items:start;}
+  .input-panel{background:rgba(26,20,16,.72); border:0.5px solid var(--line); border-radius:16px; padding:18px; box-shadow:0 18px 50px rgba(0,0,0,.14);}
+  .desktop-section-title{display:block; margin:0 0 15px; padding-bottom:11px; border-bottom:0.5px solid var(--line);}
+  .desktop-section-title b{font-size:16px;}
+  .desktop-section-title span{display:block; margin-top:4px; color:var(--txt3); font-size:11px;}
+  .row>.fld{min-width:0;}
+  .estgrid{grid-template-columns:repeat(3,minmax(0,1fr));}
+  .estnote{grid-column:1/4;}
+  .settings-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
+  .settings-grid .full{grid-column:1/4;}
+  #settingsView .body{max-width:980px; margin:0 auto;}
+  .result-dock{bottom:78px; width:min(1180px,100%); padding:0 24px 10px;}
+  .result-dock button{min-height:68px; grid-template-columns:62px 1fr auto; padding:8px 16px;}
+  .bottom-nav{width:min(1180px,100%); height:72px; padding:8px 22px; grid-template-columns:repeat(3,minmax(140px,220px)); justify-content:center; gap:12px;}
+  .nav-btn{flex-direction:row; gap:8px; font-size:13px;}
+  .nav-btn .ni{font-size:18px;}
+  .scrim{align-items:center; justify-content:center; padding:28px;}
+  .sheet{max-width:680px; max-height:90vh; border-radius:18px; padding-bottom:10px; box-shadow:0 26px 90px rgba(0,0,0,.55);}
+  .result-sheet{max-width:820px; max-height:88vh;}
+  .result-content{padding:20px;}
+  .metrics{grid-template-columns:repeat(3,minmax(0,1fr));}
+  .details{padding:16px;}
+  .flist{max-height:56vh;}
+  .two-phase-grid{grid-template-columns:1fr 1fr;}
+  .gas-liquid-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
+  .gas-liquid-grid .full{grid-column:1/4;}
+}
+
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="hdr">
+    <div class="hdr-l"><span class="ico">⬡</span><div><b>PipeCalc</b><div class="hdr-tag">v7.2 · SINGLE + H₂O / GAS-LIQUID 2-PHASE</div></div></div>
+    <div class="hdr-actions"><button class="iconbtn" id="headerSettingsBtn" aria-label="설정">⚙</button></div>
+  </header>
+
+  <section class="view active" id="calcView">
+    <div class="body">
+      <div class="profilebar">
+        <div class="plabel">현재 적용 기준 · Settings에서 수정 가능</div>
+        <select id="profileSelect" class="native-select" aria-label="적용 기준"></select>
+        <button class="mini-btn" id="profileSettingsBtn">기준 설정</button>
+      </div>
+
+      <div class="workspace-grid">
+      <div class="input-panel">
+      <div class="desktop-section-title"><b>유체와 운전조건</b><span>단상, 순수 Water/Steam 2상 또는 제한적 Gas-Liquid 상태를 정의합니다.</span></div>
+
+      <div class="seg" id="phaseSeg">
+        <button class="act" data-ph="gas">기체 Gas</button>
+        <button data-ph="liquid">액체 Liquid</button>
+        <button data-ph="two-phase">기액 2Φ</button>
+      </div>
+
+      <div class="fld" id="fluidBlock">
+        <label>유체 Fluid</label>
+        <button class="selbtn" id="fluidBtn"><span id="fluidLbl">천연가스 (NG)</span><i>⌄</i></button>
+      </div>
+
+      <div class="mode-card" id="h2oModeBlock">
+        <div class="fld" style="margin-bottom:8px"><label>Water/Steam 계산 모드</label></div>
+        <div class="seg" id="calcModeSeg">
+          <button class="act" data-mode="single">단상 P,T</button>
+          <button data-mode="px">2상 P,x</button>
+          <button data-mode="ph">2상 P,h</button>
+        </div>
+        <div class="mode-note" id="modeNote">단상은 IF97 기반 정상상태 등온 적분입니다.</div>
+        <div class="two-phase-inputs" id="twoPhaseBlock">
+          <div class="two-phase-grid">
+            <div class="fld" id="qualityBlock"><label>입구 증기품질 Quality, x</label><div class="inwrap"><input id="quality" inputmode="decimal" value="20"/><span class="u">wt% vapor</span></div></div>
+            <div class="fld hidden" id="enthalpyBlock"><label>입구 비엔탈피 Specific Enthalpy, h</label><div class="inwrap"><input id="enthalpy" inputmode="decimal" value="1165.57"/><span class="u">kJ/kg</span></div></div>
+          </div>
+          <div class="smallnote" id="satPreview">입구 압력을 입력하면 IF97 포화온도·hf·hg를 자동 표시합니다.</div>
+        </div>
+      </div>
+
+      <div class="mode-card gas-liquid-card" id="gasLiquidBlock">
+        <div class="fld" style="margin-bottom:8px"><label>제한적 Gas-Liquid 입력</label></div>
+        <div class="mode-note">양상 물성을 입구 운전조건 기준으로 직접 입력합니다. 기액평형·Flash·유동양식은 계산하지 않습니다.</div>
+        <div class="gas-liquid-grid">
+          <div class="fld full"><label>기상 질량분율 Gas mass fraction, xg</label><div class="inwrap"><input id="glQuality" inputmode="decimal" value="0.3"/><span class="u">wt% gas</span></div></div>
+          <div class="fld"><label>액상 밀도 ρL</label><div class="inwrap"><input id="glRhoL" inputmode="decimal" value="998.2"/><span class="u">kg/m³</span></div></div>
+          <div class="fld"><label>액상 점도 μL</label><div class="inwrap"><input id="glMuL" inputmode="decimal" value="1.002"/><span class="u">mPa·s</span></div></div>
+          <div class="fld"><label>기상 밀도 ρG</label><div class="inwrap"><input id="glRhoG" inputmode="decimal" value="1.204"/><span class="u">kg/m³</span></div></div>
+          <div class="fld"><label>기상 점도 μG</label><div class="inwrap"><input id="glMuG" inputmode="decimal" value="0.0181"/><span class="u">mPa·s</span></div></div>
+        </div>
+        <button class="sample-btn" id="airWaterSampleBtn" type="button">Air-Water 20℃·0 barg 검증 예시 불러오기</button>
+        <div class="smallnote">ρG는 입력 압력의 값이어야 합니다. 앱은 등온·고정 Z 근사로 배관 중 ρG∝P만 반영합니다.</div>
+      </div>
+
+      <div class="special-input" id="concBlock">
+        <div class="fld" style="margin-bottom:9px">
+          <label>NaOH 농도 Concentration</label>
+          <div class="inwrap"><input id="conc" inputmode="decimal" value="30"/><span class="u">wt%</span></div>
+        </div>
+        <div class="conc-chips" id="concChips"></div>
+        <div class="smallnote">10~50 wt%, 20~100℃ 표를 보간한 현장 근사입니다. 추정 ρ·μ는 탭하여 실제값으로 교체할 수 있습니다.</div>
+      </div>
+
+      <div class="fld">
+        <label>유량 Flow Rate</label>
+        <div class="row">
+          <div class="inwrap" style="flex:1;"><input id="flow" inputmode="decimal" value="5000"/></div>
+          <button class="selbtn" id="flowUnitBtn" style="width:112px;"><span id="flowUnitLbl">Nm³/h</span><i>⌄</i></button>
+        </div>
+      </div>
+
+      <div class="fld">
+        <label>입구 압력</label>
+        <div class="presets" id="presChips"></div>
+        <div class="preset-note" id="presNote"></div>
+        <div class="inwrap"><input id="pres" inputmode="decimal" value="50"/><span class="u">barg</span></div>
+      </div>
+
+      <div class="fld" id="tempBlock">
+        <label>입구 온도</label>
+        <div class="inwrap"><input id="temp" inputmode="decimal" value="40"/><span class="u">℃</span></div>
+      </div>
+
+      </div>
+      <div class="input-panel">
+      <div class="desktop-section-title"><b>배관조건과 계산</b><span>표준 치수·조도·길이·고도차를 반영해 압력강하를 적분합니다.</span></div>
+
+      <div class="row mb">
+        <div class="fld"><label>배관 Size (NPS)</label><button class="selbtn" id="npsBtn"><span id="npsLbl">6&quot;</span><i>⌄</i></button></div>
+        <div class="fld"><label>Schedule</label><button class="selbtn" id="schBtn"><span id="schLbl">Sch 40 (STD)</span><i>⌄</i></button></div>
+      </div>
+
+      <div class="fld">
+        <label>배관 재질 Material <span style="color:var(--special)">→ ε 자동</span></label>
+        <button class="selbtn" id="matBtn"><span id="matLbl">탄소강 신관</span><i>⌄</i></button>
+      </div>
+
+      <div class="fld">
+        <label>직관 길이 Length</label>
+        <div class="inwrap"><input id="len" inputmode="decimal" value="200"/><span class="u">m</span></div>
+      </div>
+
+      <div class="fld">
+        <label>고도차 Δz <span style="color:var(--txt3)">(출구 − 입구)</span></label>
+        <div class="inwrap"><input id="elev" inputmode="decimal" value="0"/><span class="u">m</span></div>
+        <div class="smallnote">상향은 +, 하향은 −입니다.</div>
+      </div>
+
+      <div class="fld">
+        <label>부속·밸브 등가길이 여유</label>
+        <button class="selbtn" id="allowBtn"><span id="allowLbl">+20% (일반)</span><i>⌄</i></button>
+      </div>
+
+      <div class="estcard">
+        <div class="top"><div class="l">⚗ 자동 추정 물성</div><span class="badge" id="estBadge">탭하여 수정</span></div>
+        <div class="estgrid" id="estGrid"></div>
+      </div>
+
+      <button class="calc" id="calcBtn">▶ 현장 적합성 계산</button>
+      </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="settingsView">
+    <div class="body">
+      <div class="page-title"><h2>판정 기준 설정</h2><p>펌프 전단, 냉각수(CW), 헤더 등 현장 상황별 기준을 저장합니다. 입력값은 사내 설계기준에 맞춰 수정하세요.</p></div>
+
+      <div class="settings-card">
+        <h3>편집할 기준 프로파일</h3>
+        <select id="settingsProfileSelect" class="native-select"></select>
+        <div class="profile-description" id="profileDescription"></div>
+      </div>
+
+      <div class="settings-card">
+        <h3>허용 기준</h3>
+        <div class="settings-grid">
+          <div class="fld"><label>액체 최대 유속</label><div class="inwrap"><input id="setLiqV" inputmode="decimal"/><span class="u">m/s</span></div></div>
+          <div class="fld"><label>기체 최대 유속</label><div class="inwrap"><input id="setGasV" inputmode="decimal"/><span class="u">m/s</span></div></div>
+          <div class="fld"><label>액체 최대 ΔP/100m</label><div class="inwrap"><input id="setLiqDP" inputmode="decimal"/><span class="u">bar</span></div></div>
+          <div class="fld"><label>기체 최대 ΔP/100m</label><div class="inwrap"><input id="setGasDP" inputmode="decimal"/><span class="u">bar</span></div></div>
+          <div class="fld"><label>기체 최대 Mach</label><div class="inwrap"><input id="setMach" inputmode="decimal"/><span class="u">Ma</span></div></div>
+          <div class="fld"><label>최소 출구압력</label><div class="inwrap"><input id="setMinOut" inputmode="decimal" placeholder="미사용"/><span class="u">barg</span></div></div>
+        </div>
+        <div class="setting-note">최소 출구압력을 비워 두면 판정에서 제외합니다. 펌프 전단 프로파일에서는 배관 손실뿐 아니라 실제 NPSH 검토가 별도로 필요합니다.</div>
+      </div>
+
+      <div class="button-stack">
+        <button class="save-btn" id="saveSettingsBtn">설정 저장 및 적용</button>
+        <button class="danger-btn" id="resetSettingsBtn">선택 프로파일 기본값 복원</button>
+        <a class="secondary-btn" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="PipeCalc_v7_2_Manual.html">사용 설명서 열기</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="result-dock" id="resultDock">
+  <button id="resultDockBtn" aria-label="결과 상세 보기">
+    <div class="dock-status" id="dockStatus">—</div>
+    <div class="dock-main"><b id="dockTitle">계산 결과</b><span id="dockSub">상세 결과 보기</span></div>
+    <div class="dock-arrow">⌃</div>
+  </button>
+</div>
+
+<nav class="bottom-nav" id="bottomNav">
+  <button class="nav-btn active" data-view="calc"><span class="ni">◉</span><span>계산</span></button>
+  <button class="nav-btn" data-view="settings"><span class="ni">⚙</span><span>설정</span></button>
+  <a class="nav-btn" href="PipeCalc_v7_2_Manual.html"><span class="ni">?</span><span>사용설명</span></a>
+</nav>
+
+<div class="scrim" id="wheelScrim"><div class="sheet"><div class="sheet-hd"><button class="cancel" id="wheelCancel">취소</button><b id="wheelTitle">선택</b><button id="wheelDone">완료</button></div><div class="wheel" id="wheel"><div class="sel"></div><ul id="wheelList"></ul></div></div></div>
+
+<div class="scrim" id="fluidScrim"><div class="sheet"><div class="sheet-hd"><button class="cancel" id="fluidCancel">취소</button><b>유체 선택</b><span style="width:44px"></span></div><div class="searchwrap"><input id="fluidSearch" placeholder="유체명 검색 (예: EDC, NaOH, Cl2)" /></div><div class="flist" id="fluidList"></div></div></div>
+
+<div class="scrim" id="resultScrim"><div class="sheet result-sheet"><div class="sheet-hd"><span style="width:44px"></span><b>계산 상세 결과</b><button class="close-x" id="resultClose">×</button></div><div class="result-content" id="resultDetail"></div></div></div>
+
+<script>
+/*
+Embedded thermodynamic engine: iapws-if97 2.2.0 (MIT)
+Copyright (c) 2026 jltonghui. IAPWS equations used with attribution.
+*/
+(()=>{var Q0=Object.defineProperty;var Z0=(e,t,n)=>t in e?Q0(e,t,{enumerable:!0,configurable:!0,writable:!0,value:n}):e[t]=n;var G=(e,t,n)=>Z0(e,typeof t!="symbol"?t+"":t,n);var g;(function(e){e[e.Region1=1]="Region1",e[e.Region2=2]="Region2",e[e.Region3=3]="Region3",e[e.Region4=4]="Region4",e[e.Region5=5]="Region5"})(g||(g={}));var P=class extends Error{constructor(t){super(t),this.name="IF97Error"}},H=class extends P{constructor(n,r,o,i){super(`${n} = ${r} is out of range [${o}, ${i}]`);G(this,"parameter");G(this,"value");G(this,"min");G(this,"max");this.parameter=n,this.value=r,this.min=o,this.max=i,this.name="OutOfRangeError"}},V=class extends P{constructor(n,r){super(`${n} failed to converge after ${r} iterations`);G(this,"solver");G(this,"iterations");this.solver=n,this.iterations=r,this.name="ConvergenceError"}};var w0=.46151805,x=647.096,d0=.001,n0=1e-9,M0=1e-8,y=22.064,u0=1e-9;var O=322,c0=611657e-9,k=273.16,d=.000611212677444,X=100,L=273.15,f0=2273.15;var F=623.15,j=1073.15;var A0=4,U=16.5291642526,h0=863.15;var W=1073.15,K=50,C0=2273.15;var e1=[[0,-2,.14632971213167],[0,-1,-.84548187169114],[0,0,-3.756360367204],[0,1,3.3855169168385],[0,2,-.95791963387872],[0,3,.15772038513228],[0,4,-.016616417199501],[0,5,.00081214629983568],[1,-9,.00028319080123804],[1,-7,-.00060706301565874],[1,-1,-.018990068218419],[1,0,-.032529748770505],[1,1,-.021841717175414],[1,3,-5283835796993e-17],[2,-3,-.00047184321073267],[2,0,-.00030001780793026],[2,1,47661393906987e-18],[2,3,-44141845330846e-19],[2,17,-72694996297594e-29],[3,-4,-31679644845054e-18],[3,0,-28270797985312e-19],[3,6,-85205128120103e-23],[4,-5,-22425281908e-16],[4,-2,-65171222895601e-20],[4,10,-14341729937924e-26],[5,-8,-40516996860117e-20],[8,-11,-12734301741641e-22],[8,-6,-17424871230634e-23],[21,-29,-68762131295531e-32],[23,-31,14478307828521e-33],[29,-38,26335781662795e-36],[30,-39,-11947622640071e-36],[31,-40,18228094581404e-37],[32,-41,-93537087292458e-39]],t1=16.53,n1=1386;function q(e,t){let n=e/t1,r=n1/t,o=0,i=0,f=0,s=0,m=0,a=0;for(let[p,l,R]of e1){let _=Math.pow(7.1-n,p),h=Math.pow(r-1.222,l);o+=R*_*h,i+=-R*p*Math.pow(7.1-n,p-1)*h,f+=R*p*(p-1)*Math.pow(7.1-n,p-2)*h,s+=R*_*l*Math.pow(r-1.222,l-1),m+=R*_*l*(l-1)*Math.pow(r-1.222,l-2),a+=-R*p*Math.pow(7.1-n,p-1)*l*Math.pow(r-1.222,l-1)}return{region:g.Region1,pressure:e,temperature:t,specificVolume:.461526*t*n*i/(1e3*e),internalEnergy:.461526*t*(r*s-n*i),entropy:.461526*(r*s-o),enthalpy:.461526*t*r*s,cp:.461526*(-r*r*m),cv:.461526*(-r*r*m+Math.pow(i-r*a,2)/f),speedOfSound:Math.sqrt(1e3*.461526*t*i*i/(Math.pow(i-r*a,2)/(r*r*m)-f)),quality:null,isobaricExpansion:(1-r*a/i)/t,isothermalCompressibility:-n*f/i/e}}var r1=[[0,-9.6927686500217],[1,10.086655968018],[-5,-.005608791128302],[-4,.071452738081455],[-3,-.40710498223928],[-2,1.4240819171444],[-1,-4.383951131945],[2,-.28408632460772],[3,.021268463753307]],o1=[[1,0,-.0017731742473213],[1,1,-.017834862292358],[1,2,-.045996013696365],[1,3,-.057581259083432],[1,6,-.05032527872793],[2,1,-33032641670203e-18],[2,2,-.00018948987516315],[2,4,-.0039392777243355],[2,7,-.043797295650573],[2,36,-26674547914087e-18],[3,0,20481737692309e-21],[3,1,43870667284435e-20],[3,3,-3227767723857e-17],[3,6,-.0015033924542148],[3,35,-.040668253562649],[4,1,-78847309559367e-23],[4,2,12790717852285e-21],[4,3,48225372718507e-20],[5,7,22922076337661e-19],[6,3,-16714766451061e-24],[6,16,-.0021171472321355],[6,35,-23.895741934104],[7,0,-5905956432427e-30],[7,11,-12621808899101e-19],[7,25,-.038946842435739],[8,8,11256211360459e-24],[8,36,-8.2311340897998],[9,13,19809712802088e-21],[10,4,10406965210174e-32],[10,10,-10234747095929e-26],[10,14,-10018179379511e-22],[16,29,-80882908646985e-24],[16,50,.10693031879409],[18,57,-.33662250574171],[20,20,89185845355421e-38],[20,35,30629316876232e-26],[20,48,-42002467698208e-19],[21,21,-59056029685639e-39],[22,53,37826947613457e-19],[23,39,-12768608934681e-28],[24,26,73087610595061e-42],[24,40,55414715350778e-30],[24,58,-9436970724121e-19]];function b(e,t){let n=e,r=540/t,o=Math.log(n),i=1/n,f=0,s=0;for(let[M,S]of r1)o+=S*Math.pow(r,M),f+=S*M*Math.pow(r,M-1),s+=S*M*(M-1)*Math.pow(r,M-2);let m=0,a=0,p=0,l=0,R=0,_=0;for(let[M,S,A]of o1){let z=Math.pow(n,M),T=r-.5,R0=Math.pow(T,S);m+=A*z*R0,a+=A*M*Math.pow(n,M-1)*R0,p+=A*M*(M-1)*Math.pow(n,M-2)*R0,l+=A*z*S*Math.pow(T,S-1),R+=A*z*S*(S-1)*Math.pow(T,S-2),_+=A*M*Math.pow(n,M-1)*S*Math.pow(T,S-1)}let h=i+a,I=f+l,E=s+R;return{region:g.Region2,pressure:e,temperature:t,specificVolume:.461526*t/(1e3*e)*n*h,internalEnergy:.461526*t*(r*I-n*h),entropy:.461526*(r*I-(o+m)),enthalpy:.461526*t*r*I,cp:-.461526*r*r*E,cv:.461526*(-r*r*E-Math.pow(1+n*a-r*n*_,2)/(1-n*n*p)),speedOfSound:Math.sqrt(1e3*.461526*t*(1+2*n*a+n*n*a*a)/(1-n*n*p+Math.pow(1+n*a-r*n*_,2)/(r*r*E))),quality:null,isobaricExpansion:(1+n*a-r*n*_)/(1+n*a)/t,isothermalCompressibility:(1-n*n*p)/(1+n*a)/e}}var i1=[[0,-13.179983674201],[1,6.8540841634434],[-3,-.024805148933466],[-2,.36901534980333],[-1,-3.1161318213925],[2,-.32961626538917]],a1=[[1,1,.0015736404855259],[1,2,.00090153761673944],[1,3,-.0050270077677648],[2,3,22440037409485e-19],[2,9,-41163275453471e-19],[3,7,37919454822955e-21]];function Q(e,t){let n=e,r=1e3/t,o=Math.log(n),i=1/n,f=0,s=0;for(let[M,S]of i1)o+=S*Math.pow(r,M),f+=S*M*Math.pow(r,M-1),s+=S*M*(M-1)*Math.pow(r,M-2);let m=0,a=0,p=0,l=0,R=0,_=0;for(let[M,S,A]of a1){let z=Math.pow(n,M),T=Math.pow(r,S);m+=A*z*T,a+=A*M*Math.pow(n,M-1)*T,p+=A*M*(M-1)*Math.pow(n,M-2)*T,l+=A*z*S*Math.pow(r,S-1),R+=A*z*S*(S-1)*Math.pow(r,S-2),_+=A*M*Math.pow(n,M-1)*S*Math.pow(r,S-1)}let h=i+a,I=f+l,E=s+R;return{region:g.Region5,pressure:e,temperature:t,specificVolume:.461526*t*n*h/(1e3*e),internalEnergy:.461526*t*(r*I-n*h),entropy:.461526*(r*I-(o+m)),enthalpy:.461526*t*r*I,cp:-.461526*r*r*E,cv:.461526*(-r*r*E-Math.pow(1+n*a-r*n*_,2)/(1-n*n*p)),speedOfSound:Math.sqrt(1e3*.461526*t*(1+2*n*a+n*n*a*a)/(1-n*n*p+Math.pow(1+n*a-r*n*_,2)/(r*r*E))),quality:null,isobaricExpansion:(1+n*a-r*n*_)/(1+n*a)/t,isothermalCompressibility:(1-n*n*p)/(1+n*a)/e}}function r0(e){return Math.abs(e-d)<=u0?d:Math.abs(e-c0)<=u0?c0:Math.abs(e-y)<=u0?y:e}function o0(e){return Math.abs(e-L)<=n0?L:Math.abs(e-k)<=n0?k:Math.abs(e-x)<=n0?x:e}var N=[0,1167.0521452767,-724213.16703206,-17.073846940092,12020.82470247,-32325550322333e-7,14.91510861353,-4823.2657361591,405113.40542057,-.23855557567849,650.17534844798];function Y(e){if(e<273.15||e>x)throw new H("Temperature",e,273.15,x);let t=e+N[9]/(e-N[10]),n=t*t+N[1]*t+N[2],r=N[3]*t*t+N[4]*t+N[5],o=N[6]*t*t+N[7]*t+N[8];return r0(Math.pow(2*o/(-r+Math.sqrt(r*r-4*n*o)),4))}function v(e){if(e<d||e>y)throw new H("Pressure",e,d,y);let t=Math.pow(e,.25),n=t*t+N[3]*t+N[6],r=N[1]*t*t+N[4]*t+N[7],o=N[2]*t*t+N[5]*t+N[8],i=2*o/(-r-Math.sqrt(r*r-4*n*o));return o0((N[10]+i-Math.sqrt(Math.pow(N[10]+i,2)-4*(N[9]+N[10]*i)))/2)}function b0(e){if(!Number.isFinite(e)||e<U||e>X)throw new P(`boundary23_P_to_T requires p in [${U}, ${X}] MPa, got ${e}`);return 572.54459862746+Math.sqrt((e-13.91883977887)/.0010192970039326)}function J(e,t,n){let r=0;for(let o=0;o<t.length;o++)r+=n[o]*Math.pow(e,t[o]);return r}function S0(e,t,n){let r=Math.log(e),o=0;for(let i=0;i<t.length;i++)o+=n[i]*Math.pow(r,t[i]);return o}function g0(e){return S0(e,[0,1,2,-1,-2],[1547.93642129415,-187.661219490113,21.3144632222113,-1918.87498864292,918.419702359447])}function D(e){return J(e,[0,1,2,3],[585.276966696349,2.78233532206915,-.0127283549295878,.000159090746562729])}function Z(e){return 3.727888004*(e-22.064)+647.096}function l0(e){return J(e,[0,1,2,3,4],[-24928.4240900418,4281.43584791546,-269.02917314013,7.51608051114157,-.0787105249910383])}function _0(e){return J(e,[0,1,2,3,4],[584.814781649163,-.616179320924617,.260763050899562,-.00587071076864459,515308185433082e-19])}function e0(e){return J(e,[0,1,2,3,4],[617.229772068439,-7.70600270141675,.697072596851896,-.0157391839848015,.000137897492684194])}function v0(e){return J(e,[0,1,2,3],[535.339483742384,7.61978122720128,-.158365725441648,.00192871054508108])}function O0(e){return S0(e,[0,1,2,-1,-2],[969.461372400213,-332.500170441278,64.2859598466067,773.845935768222,-1523.13732937084])}function X0(e){return J(e,[0,1,2,3],[565.603648239126,5.29062258221222,-.102020639611016,.00122240301070145])}function B0(e){return J(e,[0,1,2,3],[584.561202520006,-1.02961025163669,.243293362700452,-.00294905044740799])}function H0(e){return J(e,[0,1,2,3],[528.199646263062,8.90579602135307,-.222814134903755,.00286791682263697])}function L0(e){return S0(e,[0,1,2,-1,-2],[7.2805260914538,97.3505869861952,14.7370491183191,329.196213998375,873.371668682417])}var N0=[[0,0,1.0658070028513],[0,0,-15.732845290239],[0,1,20.944396974307],[0,2,-7.6867707878716],[0,7,2.6185947787954],[0,10,-2.808078114862],[0,12,1.2053369696517],[0,23,-.0084566812812502],[1,2,-1.2654315477714],[1,6,-1.1524407806681],[1,15,.88521043984318],[1,17,-.64207765181607],[2,0,.38493460186671],[2,2,-.85214708824206],[2,6,4.8972281541877],[2,7,-3.0502617256965],[2,22,.039420536879154],[2,26,.12558408424308],[3,0,-.2799932969871],[3,2,1.389979956946],[3,4,-2.018991502357],[3,16,-.0082147637173963],[3,26,-.47596035734923],[4,0,.0439840744735],[4,2,-.44476435428739],[4,4,.90572070719733],[4,26,.70522450087967],[5,1,.10770512626332],[5,3,-.32913623258954],[5,26,-.50871062041158],[6,0,-.022175400873096],[6,2,.094260751665092],[6,26,.16436278447961],[7,2,-.013503372241348],[8,26,-.014834345352472],[9,2,.00057922953628084],[9,26,.0032308904703711],[10,0,80964802996215e-18],[10,1,-.00016557679795037],[11,26,-44923899061815e-18]],u1=322,c1=647.096;function i0(e,t){if(!Number.isFinite(e)||e<=0)throw new P(`region3ByRhoT requires a finite positive density, got ${e}`);let n=e/u1,r=c1/t,o=1/e,i=N0[0][2],f=i*Math.log(n),s=i/n,m=-i/(n*n),a=0,p=0,l=0;for(let R=1;R<N0.length;R++){let[_,h,I]=N0[R],E=Math.pow(n,_),M=Math.pow(r,h);f+=I*E*M,s+=I*_*Math.pow(n,_-1)*M,m+=I*_*(_-1)*Math.pow(n,_-2)*M,a+=I*E*h*Math.pow(r,h-1),p+=I*E*h*(h-1)*Math.pow(r,h-2),l+=I*_*Math.pow(n,_-1)*h*Math.pow(r,h-1)}return{region:g.Region3,pressure:e*.461526*t*n*s/1e3,temperature:t,specificVolume:o,internalEnergy:.461526*t*r*a,entropy:.461526*(r*a-f),enthalpy:.461526*t*(r*a+n*s),cp:.461526*(-r*r*p+Math.pow(n*s-n*r*l,2)/(2*n*s+n*n*m)),cv:.461526*(-r*r*p),speedOfSound:Math.sqrt(1e3*.461526*t*(2*n*s+n*n*m-Math.pow(n*s-n*r*l,2)/(r*r*p))),quality:null,isobaricExpansion:(s-r*l)/(2*s+n*m)/t,isothermalCompressibility:1/(2*n*s+n*n*m)/e/.461526/t*1e3}}function u(e,t,n){let r=t/e.pStar,o=n/e.tStar,i=e.piExp??1,f=e.sigExp??1,s=0;for(let[a,p,l]of e.IJN)s+=l*Math.pow(r-e.piShift,i*a)*Math.pow(o-e.sigShift,f*p);let m=e.transform??"linear";return m==="pow4"?e.vStar*Math.pow(s,4):m==="exp"?e.vStar*Math.exp(s):e.vStar*s}var f1={pStar:100,tStar:760,vStar:.0024,piShift:.085,sigShift:.817,IJN:[[-12,5,.00110879558823853],[-12,10,572.616740810616],[-12,12,-76705.1948380852],[-10,5,-.0253321069529674],[-10,10,6280.08049345689],[-10,12,234105.654131876],[-8,5,.216867826045856],[-8,8,-156.237904341963],[-8,10,-26989.3956176613],[-6,1,-.000180407100085505],[-5,1,.00116732227668261],[-5,5,26.698704085604],[-5,10,28277.6617243286],[-4,8,-2424.31520029523],[-3,0,.000435217323022733],[-3,1,-.0122494831387441],[-3,3,1.79357604019989],[-3,6,44.2729521058314],[-2,0,-.00593223489018342],[-2,2,.453186261685774],[-2,3,1.3582570312914],[-1,0,.0408748415856745],[-1,1,.474686397863312],[-1,2,1.18646814997915],[0,0,.546987265727549],[0,1,.195266770452643],[1,0,-.0502268790869663],[1,2,-.369645308193377],[2,0,.0063382803752842],[2,2,.0797441793901017]]},p1={pStar:100,tStar:860,vStar:.0041,piShift:.28,sigShift:.779,IJN:[[-12,10,-.0827670470003621],[-12,12,41.6887126010565],[-10,8,.0483651982197059],[-10,14,-29103.2084950276],[-8,8,-111.422582236948],[-6,5,-.0202300083904014],[-6,6,294.002509338515],[-6,8,140.244997609658],[-5,5,-344.384158811459],[-5,8,361.182452612149],[-5,10,-1406.99677420738],[-4,2,-.00202023902676481],[-4,4,171.346792457471],[-4,5,-4.25597804058632],[-3,0,691346085000334e-20],[-3,1,.00151140509678925],[-3,2,-.0416375290166236],[-3,3,-41.3754957011042],[-3,5,-50.6673295721637],[-2,0,-.000572212965569023],[-2,2,6.08817368401785],[-2,5,23.9600660256161],[-1,0,.0122261479925384],[-1,2,2.16356057692938],[0,0,.398198903368642],[0,1,-.116892827834085],[1,0,-.102845919373532],[1,2,-.492676637589284],[2,0,.065554045640679],[3,2,-.24046253507853],[4,0,-.0269798180310075],[4,1,.128369435967012]]},l1={pStar:40,tStar:690,vStar:.0022,piShift:.259,sigShift:.903,IJN:[[-12,6,3.1196778876303],[-12,8,27671.3458847564],[-12,10,322583103403269e-7],[-10,6,-342.416065095363],[-10,8,-899732.529907377],[-10,10,-793892049821251e-7],[-8,5,95.3193003217388],[-8,6,2297.84742345072],[-8,7,175336.675322499],[-6,8,791214365222792e-8],[-5,1,319933345844209e-19],[-5,4,-65.9508863555767],[-5,7,-833426.563212851],[-4,2,.0645734680583292],[-4,8,-382031020570813e-8],[-3,0,406398848470079e-19],[-3,3,31.0327498492008],[-2,0,-.000892996718483724],[-2,4,234.604891591616],[-2,5,3775.15668966951],[-1,0,.0158646812591361],[-1,1,.707906336241843],[-1,2,12.601622514657],[0,0,.736143655772152],[0,1,.676544268999101],[0,2,-17.8100588189137],[1,0,-.156531975531713],[1,2,11.7707430048158],[2,0,.0840143653860447],[2,1,-.186442467471949],[2,3,-44.0170203949645],[2,7,123290423502494e-8],[3,0,-.0240650039730845],[3,7,-107077716660869e-8],[8,1,.0438319858566475]]},_1={pStar:40,tStar:690,vStar:.0029,piShift:.559,sigShift:.939,transform:"pow4",IJN:[[-12,4,-452484847171645e-24],[-12,6,315210389538801e-19],[-12,7,-.00214991352047545],[-12,10,508.058874808345],[-12,12,-127123036845932e-7],[-12,16,115371133120497e-2],[-10,0,-197805728776273e-30],[-10,2,241554806033972e-25],[-10,4,-156481703640525e-20],[-10,6,.00277211346836625],[-10,8,-20.3578994462286],[-10,10,144369489909053e-8],[-10,14,-411254217946539e-4],[-8,3,623449786243773e-20],[-8,7,-22.1774281146038],[-8,8,-68931.5087933158],[-8,10,-195419525060713e-7],[-6,6,3163.73510564015],[-6,8,224040754426988e-8],[-5,1,-436701347922356e-20],[-5,2,-.000404213852833996],[-5,5,-348.153203414663],[-5,7,-385294.213555289],[-4,0,135203700099403e-21],[-4,1,.000134648383271089],[-4,7,125031.835351736],[-3,2,.0968123678455841],[-3,4,225.660517512438],[-2,0,-.000190102435341872],[-2,1,-.0299628410819229],[-1,0,.00500833915372121],[-1,1,.387842482998411],[-1,5,-1385.35367777182],[0,0,.870745245971773],[0,2,1.71946252068742],[1,0,-.0326650121426383],[1,6,4980.44171727877],[3,0,.00551478022765087]]},m1={pStar:40,tStar:710,vStar:.0032,piShift:.587,sigShift:.918,IJN:[[-12,14,715815808404721e-6],[-12,16,-114328360753449e-3],[-10,3,37653100201572e-25],[-10,6,-903983668691157e-19],[-10,10,665695.908836252],[-10,14,535364174960127e-5],[-10,16,794977402335603e-4],[-8,7,92.2230563421437],[-8,8,-142586.073991215],[-8,10,-111796381424162e-8],[-6,6,8961.2162964076],[-5,6,-6699.89239070491],[-4,2,.00451242538486834],[-4,4,-33.9731325977713],[-3,2,-1.20523111552278],[-3,6,47599.2667717124],[-3,7,-266627.750390341],[-2,0,-.000153314954386524],[-2,1,.305638404828265],[-2,3,123.654999499486],[-2,4,-1043.90794213011],[-1,0,-.0157496516174308],[0,0,.685331118940253],[0,1,1.78373462873903],[1,0,-.54467412487891],[1,4,2045.29931318843],[1,6,-22834.2359328752],[2,0,.413197481515899],[2,2,-34.1931835910405]]},R1={pStar:40,tStar:730,vStar:.0064,piShift:.587,sigShift:.891,piExp:.5,transform:"pow4",IJN:[[0,-3,-251756547792325e-22],[0,-2,601307193668763e-20],[0,-1,-.00100615977450049],[0,0,.999969140252192],[0,1,2.14107759236486],[0,2,-16.5175571959086],[1,-1,-.00141987303638727],[1,1,2.69251915156554],[1,2,34.9741815858722],[1,3,-30.0208695771783],[2,0,-1.31546288252539],[2,1,-8.39091277286169],[3,-5,181545608337015e-24],[3,-2,-.000591099206478909],[3,0,1.52115067087106],[4,-3,252956470663225e-19],[5,-8,100726265203786e-29],[5,1,-1.4977453386065],[6,-6,-793940970562969e-24],[7,-4,-.000150290891264717],[7,1,1.51205531275133],[10,-6,470942606221652e-20],[12,-10,195049710391712e-27],[12,-8,-911627886266077e-23],[12,-4,.000604374640201265],[14,-12,-225132933900136e-30],[14,-10,610916973582981e-26],[14,-8,-303063908043404e-21],[14,-6,-137796070798409e-19],[14,-4,-.000919296736666106],[16,-10,639288223132545e-24],[16,-8,753259479898699e-21],[18,-12,-400321478682929e-27],[18,-10,756140294351614e-23],[20,-12,-912082054034891e-26],[20,-10,-237612381140539e-22],[20,-6,269586010591874e-19],[22,-12,-732828135157839e-25],[24,-12,24199557830666e-23],[24,-4,-.000405735532730322],[28,-12,189424143498011e-24],[32,-12,-486632965074563e-24]]},M1={pStar:25,tStar:660,vStar:.0027,piShift:.872,sigShift:.971,transform:"pow4",IJN:[[-12,7,412209020652996e-19],[-12,12,-114987238280587e-8],[-12,14,94818088503208e-4],[-12,18,-195788865718971e3],[-12,22,4962507048713e12],[-12,24,-105549884548496e14],[-10,14,-758642165988278e-3],[-10,20,-922172769596101e8],[-10,24,725379072059348e15],[-8,7,-61.7718249205859],[-8,8,10755.5033344858],[-8,10,-379545802336487e-7],[-8,12,228646846221831e-3],[-6,8,-499741093010619e-8],[-6,22,-280214310054101e16],[-5,7,104915406769586e-8],[-5,20,613754229168619e13],[-4,22,802056715528378e17],[-3,7,-298617819828065e-7],[-2,3,-91.0782540134681],[-2,5,135033.227281565],[-2,14,-712949383408211e4],[-2,24,-104578785289542e22],[-1,2,30.4331584444093],[-1,8,593250797959445e-5],[-1,18,-364174062110798e13],[0,0,.921791403532461],[0,1,-.337693609657471],[0,2,-72.4644143758508],[1,0,-.110480239272601],[1,1,5.36516031875059],[1,3,-2914.41872156205],[3,24,616338176535305e25],[5,22,-12088917586118e25],[6,12,818396024524612e8],[8,3,940781944835829e-6],[10,0,-36727.9669545448],[10,6,-8375139317986550]]},h1={pStar:25,tStar:660,vStar:.0032,piShift:.898,sigShift:.983,transform:"pow4",IJN:[[-12,8,.0561379678887577],[-12,12,774135421587083e-5],[-10,4,111482975877938e-23],[-10,6,-.00143987128208183],[-10,8,1936.9655876492],[-10,10,-605971823585005e-6],[-10,14,171951568124337e-1],[-10,16,-0x41e39802409844],[-8,0,38785116807801e-30],[-8,1,-395464327846105e-28],[-8,6,-170.875935679023],[-8,7,-2120.1062070122],[-8,8,177683337348191e-7],[-6,4,11.0177443629575],[-6,6,-234396.091693313],[-6,8,-656174421999594e-8],[-5,2,156362212977396e-19],[-5,3,-2.129462570214],[-5,4,13.5249306374858],[-4,2,.177189164145813],[-4,4,1394.99167345464],[-3,1,-.00703670932036388],[-3,2,-.152011044389648],[-2,0,981916922991113e-19],[-1,0,.00147199658618076],[-1,2,20.2618487025578],[0,0,.89934551894424],[1,0,-.211346402240858],[1,2,24.9971752957491]]},C1={pStar:25,tStar:660,vStar:.0041,piShift:.91,sigShift:.984,piExp:.5,transform:"pow4",IJN:[[0,0,1.06905684359136],[0,1,-1.48620857922333],[0,10,0xec57e58491b8],[1,-4,-446352055678749e-26],[1,-2,-566620757170032e-21],[1,-1,-.00235302885736849],[1,0,-.269226321968839],[2,0,9.22024992944392],[3,-5,357633505503772e-26],[3,0,-17.3942565562222],[4,-3,700681785556229e-20],[4,-2,-.000267050351075768],[4,-1,-2.31779669675624],[5,-6,-753533046979752e-27],[5,-1,4.81337131452891],[5,12,-223286270422356e7],[7,-4,-118746004987383e-19],[7,-3,.00646412934136496],[8,-6,-410588536330937e-24],[8,10,422739537057241e5],[10,-8,313698180473812e-27],[12,-12,16439533434504e-37],[12,-6,-339823323754373e-20],[12,-4,-.0135268639905021],[14,-10,-723252514211625e-29],[14,-8,184386437538366e-23],[14,-4,-.0463959533752385],[14,5,-99226310037675],[18,-12,688169154439335e-31],[18,-10,-222620998452197e-25],[18,-8,-540843018624083e-22],[18,-6,.00345570606200257],[18,2,422275800304086e-4],[20,-12,-126974478770487e-29],[20,-10,927237985153679e-24],[22,-12,612670812016489e-28],[24,-12,-722693924063497e-26],[24,-8,-.000383669502636822],[32,-10,.000374684572410204],[32,-5,-93197.6897511086],[36,-10,-.0247690616026922],[36,-8,65.8110546759474]]},S1={pStar:25,tStar:670,vStar:.0054,piShift:.875,sigShift:.964,piExp:.5,transform:"pow4",IJN:[[0,-1,-.00011137131739554],[0,0,1.00342892423685],[0,1,5.30615581928979],[1,-2,179058760078792e-20],[1,-1,-.000728541958464774],[1,1,-18.7576133371704],[2,-1,.00199060874071849],[2,1,24.357475537729],[3,-2,-.000177040785499444],[4,-2,-.0025968038522713],[4,2,-198.704578406823],[5,-3,738627790224287e-19],[5,-2,-.00236264692844138],[5,0,-1.61023121314333],[6,3,6223.22971786473],[10,-6,-960754116701669e-23],[12,-8,-510572269720488e-25],[12,-3,.00767373781404211],[14,-10,663855469485254e-29],[14,-8,-717590735526745e-24],[14,-5,146564542926508e-19],[16,-10,309029474277013e-26],[18,-12,-464216300971708e-30],[20,-12,-390499637961161e-28],[20,-10,-236716126781431e-24],[24,-12,454652854268717e-26],[24,-6,-.00422271787482497],[28,-12,283911742354706e-25],[28,-5,2.70929002720228]]},g1={pStar:25,tStar:680,vStar:.0077,piShift:.802,sigShift:.935,IJN:[[-2,10,-401215699576099e-6],[-2,12,484501478318406e-4],[-1,-5,394721471363678e-29],[-1,6,37262.9967374147],[0,-12,-369794374168666e-44],[0,-6,-380436407012452e-29],[0,-2,475361629970233e-21],[0,-1,-.000879148916140706],[0,0,.844317863844331],[0,1,12.24331626566],[0,2,-104.529634830279],[0,3,589.702771277429],[0,14,-291026851164444e-1],[1,-3,17034307284185e-19],[1,-2,-.000277617606975748],[1,0,-3.44709605486686],[1,1,22.1333862447095],[1,2,-194.646110037079],[2,-8,808354639772825e-30],[2,-6,-18084520914547e-24],[2,-3,-696664158132412e-20],[2,-2,-.00181057560300994],[2,0,2.55830298579027],[2,4,3289.13873658481],[5,-12,-173270241249904e-33],[5,-6,-661876792558034e-21],[5,-3,-.0039568892342125],[6,-12,604203299819132e-32],[6,-10,-400879935920517e-28],[6,-8,160751107464958e-23],[6,-5,383719409025556e-19],[8,-12,-649565446702457e-29],[10,-12,-149095328506e-23],[12,-10,541449377329581e-23]]},N1={pStar:24,tStar:650,vStar:.0026,piShift:.908,sigShift:.989,transform:"pow4",IJN:[[-12,14,260702058647537e-5],[-12,16,-0xab3cb46fab60],[-12,18,554923870289667e4],[-12,20,-758966946387758e8],[-12,22,413865186848908e12],[-10,14,-81503800073806e-2],[-10,24,-381458260489955e18],[-8,6,-.0123239564600519],[-8,10,226095631437174e-7],[-8,12,-49501780950672e-2],[-8,14,5294829964228630],[-8,18,-444359478746295e8],[-8,24,521635864527315e20],[-8,36,-487095672740742e40],[-6,8,-714430.209937547],[-5,4,.127868634615495],[-5,5,-10.0752127917598],[-4,7,77745143796099e-7],[-4,16,-108105480796471e10],[-3,1,-357578581169659e-20],[-3,3,-2.12857169423484],[-3,18,270706111085238e15],[-3,20,-695953622348829e18],[-2,2,.11060902747228],[-2,3,72.1559163361354],[-2,10,-306367307532219],[-1,0,26583961888553e-18],[-1,1,.0253392392889754],[-1,3,-214.443041836579],[0,0,.937846601489667],[0,1,2.231840431017],[0,2,33.8401222509191],[0,12,494237237179718e6],[1,0,-.198068404154428],[1,16,-14141534988114e17],[2,1,-99.3862421613651],[4,0,125.070534142731],[5,0,-996.473529004439],[5,1,47313.7909872765],[6,14,116662121219322e18],[10,4,-0xb38ddbd8a7ec2],[10,12,-445703369196945e18],[14,10,642794932373694e18]]},I1={pStar:23,tStar:650,vStar:.0028,piShift:1,sigShift:.997,sigExp:.25,IJN:[[0,0,.811384363481847],[3,0,-5681.99310990094],[8,0,-178657198172556e-4],[20,2,795537657613427e17],[1,5,-81456.8209346872],[3,5,-659774567602874e-7],[4,5,-152861148659302e-4],[5,5,-560165667510446e-3],[1,6,458384.828593949],[6,6,-385754000383848e-1],[2,7,453735800004273e-7],[4,8,939454935735563e-3],[14,8,266572856432938e13],[2,10,-547578313899097e-5],[5,10,0xb68f181cb242],[3,12,185007245563239e-2],[0,14,185135446828337e-6],[1,14,-170451090076385e-3],[1,18,0x8f99b72e5e6e],[1,20,-0x7320116e5c57c],[28,20,36819392618357e46],[2,22,170215539458936e3],[16,22,639234909918741e27],[0,24,-821698160721956],[5,24,-795260241872306e9],[0,28,23341586947851e4],[3,28,-600079934586803e8],[4,28,594584382273384e10],[12,28,189461279349492e25],[16,28,-810093428842645e31],[1,32,188813911076809e7],[8,32,111052244098768e21],[14,32,291133958602503e31],[0,36,-32942192395146e8],[2,36,-137570282536696e11],[3,36,181508996303902e13],[4,36,-346865122768353e15],[8,36,-21196114177426e24],[14,36,-128617899887675e34],[24,36,479817895699239e50]]},P1={pStar:23,tStar:650,vStar:.0031,piShift:.976,sigShift:.997,transform:"exp",IJN:[[0,-12,280967799943151e-53],[3,-12,614869006573609e-45],[4,-12,582238667048942e-42],[6,-12,390628369238462e-37],[7,-12,821445758255119e-35],[10,-12,402137961842776e-29],[12,-12,651718171878301e-27],[14,-12,-211773355803058e-22],[18,-12,.00264953354380072],[0,-10,-135031446451331e-46],[3,-10,-607246643970893e-38],[5,-10,-402352115234494e-33],[6,-10,-744938506925544e-31],[8,-10,189917206526237e-27],[12,-10,364975183508473e-20],[0,-8,177274872361946e-40],[3,-8,-334952758812999e-33],[7,-8,-421537726098389e-23],[12,-8,-.0391048167929649],[2,-6,541276911564176e-28],[3,-6,705412100773699e-26],[4,-6,258585887897486e-23],[2,-5,-493111362030162e-25],[4,-5,-158649699894543e-20],[7,-5,-.5250374278861],[4,-4,.00220019901729615],[3,-3,-.00643064132636925],[5,-3,62.9154149015048],[6,-3,135.147318617061],[0,-2,240560808321713e-21],[0,-1,-.000890763306701305],[3,-1,-4402.09599407714],[1,0,-302.807107747776],[0,1,1591.58748314599],[1,1,232534.272709876],[0,2,-792681.2071326],[1,4,-869871364662769e-4],[0,5,354542769185671e-3],[1,6,400849240129329]]},y1={pStar:23,tStar:650,vStar:.0034,piShift:.974,sigShift:.996,piExp:.5,IJN:[[0,-12,128746023979718e-49],[0,-4,-735234770382342e-26],[0,-1,.0028907869214915],[2,-1,.244482731907223],[3,-10,141733492030985e-38],[4,-12,-354533853059476e-43],[4,-8,-594539202901431e-32],[4,-5,-585188401782779e-23],[4,-4,201377325411803e-20],[4,-1,1.38647388209306],[5,-4,-173959365084772e-19],[5,-3,.00137680878349369],[6,-8,814897605805513e-29],[7,-12,425596631351839e-40],[8,-10,-387449113787755e-32],[8,-8,13981473024e-23],[8,-4,-.00171849638951521],[10,-12,641890529513296e-36],[10,-8,118960578072018e-25],[14,-12,-155282762571611e-32],[14,-8,233907907347507e-22],[20,-12,-174093247766213e-27],[20,-10,377682649089149e-23],[24,-12,-516720236575302e-25]]},x1={pStar:23,tStar:650,vStar:.0041,piShift:.972,sigShift:.997,piExp:.5,IJN:[[0,-1,-982825342010366e-19],[0,0,1.05145700850612],[0,1,116.033094095084],[0,2,3246.64750281543],[1,1,-1235.92348610137],[2,-1,-.0561403450013495],[3,-3,856677401640869e-22],[3,0,236.313425393924],[4,-2,.00972503292350109],[6,-2,-1.03001994531927],[7,-5,-149653706199162e-23],[7,-4,-215743778861592e-19],[8,-2,-8.34452198291445],[10,-3,.586602660564988],[12,-12,343480022104968e-40],[12,-6,816256095947021e-20],[12,-5,.00294985697916798],[14,-10,711730466276584e-31],[14,-8,400954763806941e-24],[14,-3,10.7766027032853],[16,-8,-409449599138182e-21],[18,-8,-729121307758902e-20],[20,-10,677107970938909e-23],[22,-10,602745973022975e-22],[24,-12,-382323011855257e-25],[24,-8,.00179946628317437],[36,-12,-.000345042834640005]]},E1={pStar:23,tStar:650,vStar:.0022,piShift:.848,sigShift:.983,transform:"pow4",IJN:[[-12,10,-82043.384325995],[-12,12,473271518461586e-4],[-10,6,-.0805950021005413],[-10,7,32.860002543598],[-10,8,-3566.1702998249],[-10,10,-172985781433335e-5],[-8,8,351769232729192e-7],[-6,6,-775489.259985144],[-5,2,710346691966018e-19],[-5,5,99349.9883820274],[-4,3,-.64209417190457],[-4,4,-6128.42816820083],[-3,3,232.808472983776],[-2,0,-142808220416837e-19],[-2,1,-.00643596060678456],[-2,2,-4.28577227475614],[-2,4,2256.89939161918],[-1,0,.0010035565172151],[-1,1,.333491455143516],[-1,2,1.09697576888873],[0,0,.961917379376452],[1,0,-.0838165632204598],[1,1,2.47795908411492],[1,3,-3191.14969006533]]},w1={pStar:23,tStar:650,vStar:.0054,piShift:.874,sigShift:.982,IJN:[[-8,6,.00144165955660863],[-8,14,-701438599628258e-2],[-3,-3,-830946716459219e-31],[-3,3,.261975135368109],[-3,4,393.097214706245],[-3,5,-10433.4030654021],[-3,8,490112654154211e-6],[0,-1,-.000147104222772069],[0,0,1.03602748043408],[0,1,3.05308890065089],[0,5,-399745276971264e-8],[3,-6,56923371959375e-25],[3,-2,-.0464923504407778],[8,-12,-535400396512906e-32],[8,-10,399988795693162e-27],[8,-8,-536479560201811e-21],[8,-5,.0159536722411202],[10,-12,270303248860217e-29],[10,-10,244247453858506e-22],[10,-8,-983430636716454e-20],[10,-6,.0663513144224454],[10,-5,-9.93456957845006],[10,-4,546.491323528491],[10,-3,-14336.5406393758],[10,-2,150764.974125511],[12,-12,-337209709340105e-24],[14,-12,377501980025469e-23]]},d1={pStar:21,tStar:640,vStar:.0022,piShift:.886,sigShift:.99,transform:"pow4",IJN:[[-12,20,-532466612140254e8],[-12,24,100415480000824e17],[-10,22,-191540001821367e15],[-8,14,0x2585ef7d1adcdc],[-6,36,202281884477061e44],[-5,8,884585472596134e-7],[-5,16,166540181638363e8],[-4,6,-313563.197669111],[-4,32,-185662327545324e39],[-3,3,-.0624942093918942],[-3,8,-50416072413259e-4],[-2,4,18751.4491833092],[-1,1,.00121399979993217],[-1,2,1.88317043049455],[-1,3,-1670.7350396206],[0,0,.965961650599775],[0,1,2.94885696802488],[0,4,-65391.5627346115],[0,28,604012200163444e35],[1,0,-.198339358557937],[1,32,-175984090163501e43],[3,0,3.56314881403987],[3,1,-575.991255144384],[3,2,45621.3415338071],[4,3,-109174044987829e-7],[4,18,437796099975134e19],[4,24,-616552611135792e31],[5,4,193568768917797e-5],[14,24,950898170425042e39]]},A1={pStar:20,tStar:650,vStar:.0088,piShift:.803,sigShift:1.02,IJN:[[0,0,1.55287249586268],[0,1,6.64235115009031],[0,4,-2893.6623672721],[0,12,-385923202309848e-2],[1,0,-2.91002915783761],[1,10,-829088246858083e-3],[2,0,1.76814899675218],[2,6,-534686695713469e-6],[2,14,160464608687834e3],[3,3,196435.366560186],[3,8,156637427541729e-2],[4,0,-1.78154560260006],[4,10,-0x82987a4d20778],[7,3,385659001648006e-7],[7,4,110554446790543e-5],[7,7,-677073830687349e-1],[7,20,-327910592086523e16],[7,36,-341552040860644e36],[10,10,-527251339709047e6],[10,12,245375640937055e9],[10,14,-168776617209269e12],[10,16,358958955867578e14],[10,22,-656475280339411e21],[18,18,355286045512301e24],[20,32,56902145441327e44],[22,22,-700584546433113e33],[22,36,-705772623326374e50],[24,24,166861176200148e38],[28,28,-300475129680486e46],[32,22,-668481295196808e36],[32,32,428432338620678e54],[32,36,-444227367758304e57],[36,36,-281396013562745e62]]},b1={pStar:23,tStar:650,vStar:.0026,piShift:.902,sigShift:.988,IJN:[[-12,14,122088349258355e3],[-10,10,104216468608488e-5],[-10,12,-8826669315646520],[-10,14,259929510849499e5],[-8,10,0xca77139f8c43],[-8,12,-878473585050085e3],[-8,14,-314432577551552e7],[-6,8,-216934916996285e-2],[-6,12,159079648196849e6],[-5,4,-339.567617303423],[-5,8,884387651337836e-2],[-5,12,-843405926846418e6],[-3,2,11.4178193518022],[-1,-1,-.000122708229235641],[-1,1,-106.201671767107],[-1,12,903443213959313e10],[-1,14,-693996270370852e13],[0,-3,648916718965575e-23],[0,1,7189.57567127851],[1,-2,.00105581745346187],[2,5,-651903203602581],[2,10,-160116813274676e10],[3,-5,-510254294237837e-23],[5,-4,-.152355388953402],[5,2,677143292290144e-3],[5,3,0xfb5d5ea4a5b2],[6,-5,.0116862983141686],[6,2,-301426947980171e-1],[8,-8,16971981388484e-21],[8,8,104674840020929e12],[10,-4,-10801.690456014],[12,-12,-990623601934295e-27],[12,-4,536116483602738e-8],[12,4,226145963747881e7],[14,-12,-48873156577621e-23],[14,-10,15100154888067e-18],[14,-6,-22770.046464392],[14,6,-781754507698846e13]]},v1={pStar:23,tStar:650,vStar:.0031,piShift:.96,sigShift:.995,IJN:[[-10,-8,-415652812061591e-69],[-8,-12,177441742924043e-75],[-6,-12,-357078668203377e-69],[-6,-3,359252213604114e-40],[-6,5,-25.9123736380269],[-6,6,59461.976619346],[-6,8,-624184007103158e-4],[-6,10,0x6f3a7cc64429a0],[-5,1,105006446192036e-23],[-5,2,-192824336984852e-20],[-5,6,654144.373749937],[-5,8,513117462865044e-2],[-5,10,-697595750347391e4],[-5,14,-103977184454767e14],[-4,-12,119563135540666e-62],[-4,-10,-436677034051655e-56],[-4,-6,926990036530639e-44],[-4,10,587793105620748e6],[-3,-3,280375725094731e-32],[-3,10,-192359972440634e8],[-3,12,742705723302738e12],[-2,2,-51.7429682450605],[-2,4,820612048645469e-8],[-1,-2,-188214882341448e-23],[-1,0,.0184587261114837],[0,-2,-135830407782663e-20],[0,6,-72368188562634800],[0,10,-223449194054124e12],[1,-12,-111526741826431e-49],[1,-10,276032601145151e-43],[3,3,0x7aa6b9468aed],[4,-6,65244029334586e-23],[4,3,51065511977436e3],[4,10,-468138358908732e17],[5,2,-7606674911832790],[8,-12,-417247986986821e-33],[10,-2,312545677756104e-1],[12,-3,-0x5b4a741e82fa],[14,1,247761392329058e12]]},O1={pStar:23,tStar:650,vStar:.0039,piShift:.959,sigShift:.995,transform:"pow4",IJN:[[-12,8,-586219133817016e-22],[-12,14,-894460355005526e-4],[-10,-1,531168037519774e-45],[-10,8,.109892402329239],[-8,6,-.0575368389425212],[-8,8,22827.6853990249],[-8,14,-158548609655002e4],[-6,-4,329865748576503e-42],[-6,-3,-634987981190669e-39],[-6,2,615762068640611e-23],[-6,8,-961109240985747e-7],[-5,-10,-406274286652625e-59],[-4,-1,-471103725498077e-27],[-4,3,.725937724828145],[-3,-10,187768525763682e-53],[-3,3,-1033.08436323771],[-2,1,-.0662552816342168],[-2,2,579.51404176571],[-1,-8,237416732616644e-41],[-1,-4,271700235739893e-29],[-1,1,-90.788621349836],[0,-12,-171242509570207e-51],[0,1,156.792067854621],[1,-1,.92326135790147],[2,-1,-5.97865988422577],[2,2,321988767636389e-8],[3,-12,-399441390042203e-44],[3,-5,493429086046981e-22],[5,-10,812036983370565e-34],[5,-8,-207610284654137e-26],[5,-6,-340821291419719e-21],[8,-12,542000573372233e-32],[8,-10,-856711586510214e-27],[10,-12,266170454405981e-28],[10,-8,858133791857099e-20]]},X1={pStar:23,tStar:650,vStar:.0049,piShift:.91,sigShift:.988,IJN:[[-8,14,377373741298151e4],[-6,10,-507100883722913e-2],[-5,10,-0x3ac1543725378],[-4,1,184790814320773e-20],[-4,2,-.000924729378390945],[-4,14,-425999562292738e9],[-3,-2,-462307771873973e-27],[-3,12,107319065855767e7],[-1,5,648662492280682e-4],[0,0,2.44200600688281],[0,4,-851535733484258e-5],[0,10,169894481433592e7],[1,-10,21578022250902e-40],[1,-1,-.320850551367334],[2,6,-38264244845861e3],[3,-12,-275386077674421e-43],[3,0,-563199.253391666],[3,8,-326068646279314e6],[4,3,397949001553184e-1],[5,-6,100824008584757e-21],[5,-2,16223.4569738433],[5,1,-432355225319745e-4],[6,1,-59287424559861e-2],[8,-6,1.33061647281106],[8,-3,157338197797544e-8],[8,1,258189614270853e-1],[8,8,262413209706358e10],[10,-8,-.0920011937431142],[12,-10,.00220213765905426],[12,-8,-11.0433759109547],[12,-5,847004870612087e-8],[12,-4,-592910695762536e-6],[14,-12,-18302717326966e-18],[14,-10,.181339603516302],[14,-8,-1192.28759669889],[14,-6,430867658061468e-8]]},B1={pStar:22,tStar:650,vStar:.0031,piShift:.996,sigShift:.994,transform:"pow4",IJN:[[0,-3,-525597995024633e-24],[0,1,5834.41305228407],[0,5,-0x2fe21365d014f4],[0,8,118973500934212e11],[1,8,-159096490904708e12],[2,-4,-315839902302021e-21],[2,-1,496.212197158239],[2,4,327777227273171e4],[2,5,-527114657850696e7],[3,-8,210017506281863e-31],[3,4,705106224399834e6],[3,8,-266713136106469e16],[4,-6,-145370512554562e-22],[4,6,14933391705313e14],[5,-2,-149795620287641e-7],[5,1,-3818819062711e3],[8,-8,724660165585797e-19],[8,-2,-937808169550193e-1],[10,-5,514411468376383e-5],[12,-8,-82819.8594040141]]},H1={pStar:22,tStar:650,vStar:.0038,piShift:.993,sigShift:.994,transform:"pow4",IJN:[[-8,3,24400789229065e-24],[-6,6,-463057430331242e-8],[-5,6,728803274777712e-5],[-5,8,0xba51bacfa1810],[-4,5,-110598170118409e-5],[-4,6,-323899915729957e-2],[-4,8,9238140070232450],[-3,-2,842250080413712e-27],[-3,5,663221436245506e-3],[-3,6,-0x980a5797f80b],[-2,2,2537.49358701391],[-1,-6,-819731559610523e-35],[0,3,328380587890663e-3],[1,1,-625004791171543e-7],[2,6,803197957462023e6],[3,-6,-204397011338353e-25],[3,-2,-3783.91047055938],[6,-6,.0097287654593862],[6,-5,15.4355721681459],[6,-4,-3739.62862928643],[6,-1,-682859011374572e-4],[8,-8,-.000248488015614543],[8,-4,394536049497068e-8]]},c={A:f1,B:p1,C:l1,D:_1,E:m1,F:R1,G:M1,H:h1,I:C1,J:S1,K:g1,L:N1,M:I1,N:P1,O:y1,P:x1,Q:E1,R:w1,S:d1,T:A1,U:b1,V:v1,W:O1,X:X1,Y:B1,Z:H1};var F0=19.00881189173929;function T0(e,t,n){return n===0?e<F0?u(c.C,e,t):e<21.0434?u(c.S,e,t):e<21.9316?u(c.U,e,t):u(c.Y,e,t):e<20.5?u(c.T,e,t):e<21.0434?u(c.R,e,t):e<21.9009?u(c.X,e,t):u(c.Z,e,t)}function U0(e,t){if(e>40)return t<=g0(e)?u(c.A,e,t):u(c.B,e,t);if(e>25){let o=D(e),i=g0(e),f=Z(e);return t<=o?u(c.C,e,t):t<=i?u(c.D,e,t):t<=f?u(c.E,e,t):u(c.F,e,t)}if(e>23.5){let o=D(e),i=l0(e),f=Z(e),s=_0(e),m=e0(e);return t<=o?u(c.C,e,t):t<=i?u(c.G,e,t):t<=f?u(c.H,e,t):t<=s?u(c.I,e,t):t<=m?u(c.J,e,t):u(c.K,e,t)}if(e>23){let o=D(e),i=l0(e),f=Z(e),s=_0(e),m=e0(e);return t<=o?u(c.C,e,t):t<=i?u(c.L,e,t):t<=f?u(c.H,e,t):t<=s?u(c.I,e,t):t<=m?u(c.J,e,t):u(c.K,e,t)}if(e>22.5){let o=D(e),i=l0(e),f=v0(e),s=Z(e),m=O0(e),a=_0(e),p=e0(e);return t<=o?u(c.C,e,t):t<=i?u(c.L,e,t):t<=f?u(c.M,e,t):t<=s?u(c.N,e,t):t<=m?u(c.O,e,t):t<=a?u(c.P,e,t):t<=p?u(c.J,e,t):u(c.K,e,t)}let r=Y(643.15);if(e>r&&e<=22.5){let o=D(e),i=X0(e),f=B0(e),s=e0(e);if(t<=o)return u(c.C,e,t);if(t<=i)return u(c.Q,e,t);if(t<=f){let m=Z(e),a=L0(e),p=H0(e);if(e>22.11)return t<=p?u(c.U,e,t):t<=m?u(c.V,e,t):t<=a?u(c.W,e,t):u(c.X,e,t);if(e>y)return t<=p?u(c.U,e,t):t<=m?u(c.Y,e,t):t<=a?u(c.Z,e,t):u(c.X,e,t);let l=v(e);return t>l?e<=21.90096265?u(c.X,e,t):t<=a?u(c.Z,e,t):u(c.X,e,t):e<=21.93161551?u(c.U,e,t):t<=p?u(c.U,e,t):u(c.Y,e,t)}return t<=s?u(c.R,e,t):u(c.K,e,t)}if(e>20.5&&e<=r){let o=D(e),i=v(e),f=e0(e);return t<=o?u(c.C,e,t):t<=i?u(c.S,e,t):t<=f?u(c.R,e,t):u(c.K,e,t)}if(e>=F0&&e<=20.5){let o=D(e),i=v(e);return t<=i?t<o&&t<i?u(c.C,e,t):u(c.S,e,t):u(c.T,e,t)}if(e>16.5291642526){let o=v(e);return t<=o?u(c.C,e,t):u(c.T,e,t)}throw new P("Region 3 v(P,T): pressure out of range")}function q0(e,t,n,r){let o=r?.tolerance??1e-7,i=r?.maxIterations??50,f=r?.h??1e-4,s=r?.epsilon??2220446049250313e-31,m=1/f,a=t;for(let p=0;p<i;p++){let l=e(a);if(!Number.isFinite(l))throw new V("newtonRaphson",p+1);if(l===0)return a;let R;if(n)R=n(a);else{let h=e(a+f),I=e(a-f),E=e(a+2*f);R=(e(a-2*f)-E+8*(h-I))*m/12}if(!Number.isFinite(R)||Math.abs(R)<=s*Math.max(1,Math.abs(l)))throw new V("newtonRaphson",p+1);let _=a-l/R;if(!Number.isFinite(_))throw new V("newtonRaphson",p+1);if(Math.abs(_-a)<=o*Math.max(1,Math.abs(_)))return _;a=_}throw new V("newtonRaphson",i)}function I0(e,t,n){let r=Number.NaN,o=null,i=s=>((s!==r||o===null)&&(r=s,o=i0(s,t)),o),f=q0(s=>!Number.isFinite(s)||s<=0?Number.NaN:i(s).pressure-e,n,s=>{if(!Number.isFinite(s)||s<=0)return Number.NaN;let m=i(s).isothermalCompressibility;return m===null?Number.NaN:1/(s*m)});return i(f)}function J0(e,t){if(e===y&&t===x)return i0(O,t);let n=I0(e,t,1/U0(e,t)),r=Math.abs(n.pressure-e)/e;if(r>1e-6)throw new P(`solveRegion3PTBasic: density solve did not converge \u2014 target P=${e} MPa, got P=${n.pressure.toFixed(6)} MPa (relErr=${r.toExponential(2)})`);return n}function D0(e,t,n){return I0(e,t,1/T0(e,t,n))}function $0(e){let t=r0(e),n=o0(v(t));if(t===y){let r=i0(O,n);return{pressure:t,temperature:n,liquid:r,vapor:r}}return n>F?{pressure:t,temperature:n,liquid:D0(t,n,0),vapor:D0(t,n,1)}:{pressure:t,temperature:n,liquid:q(t,n),vapor:b(t,n)}}function z0(e){let t=o0(e),n=r0(Y(t));return t<k?{pressure:n,temperature:t,liquid:q(n,t),vapor:b(n,t)}:$0(n)}function G0(e,t){if(t>W&&t<=C0&&e>=d&&e<=K)return g.Region5;if(e>=d&&e<=U){let n=v(e);if(t>=L&&t<=n)return g.Region1;if(t>n&&t<=j)return g.Region2}else if(e>U&&e<=X){let n=b0(e);if(t>=L&&t<=F)return g.Region1;if(t>F&&t<n)return g.Region3;if(t>=n&&t<=j)return g.Region2}return-1}var L1=q(X,F),F1=q(U,F),T1=b(X,j),t3=b(d,j),n3=b(U,F),r3=b(X,h0),o3=b(K,j),i3=Q(K,W),a3=Q(d,W),s3=Q(d,C0),V0=z0(k),u3=V0.liquid,c3=V0.vapor,f3=L1.entropy,p3=F1.entropy,l3=T1.entropy,_3=b(A0,j).entropy;var m3=x-M0;function w(e,t){if(typeof t!="number"||!Number.isFinite(t))throw new P(`${e} must be a finite number`)}function t0(e,t){if(t<=0)throw new P(`${e} must be greater than 0`)}function m0(e,t){if(t<0)throw new P(`${e} must be greater than or equal to 0`)}var U1=[1.67752,2.20462,.6366564,-.241605],q1=[.520094,.0850895,-1.08374,-.289555,0,0,.222531,.999115,1.88797,1.26613,0,.120573,-.281378,-.906851,-.772479,-.489837,-.25704,0,.161913,.257399,0,0,0,0,-.0325372,0,0,.0698452,0,0,0,0,0,0,.00872102,0,0,0,0,-.00435673,0,-593264e-9];function a0(e,t){w("Temperature",e),w("Density",t),t0("Temperature",e),m0("Density",t);let n=e/x,r=t/O,o=0;for(let a=0;a<4;a++)o+=U1[a]/Math.pow(n,a);let i=100*Math.sqrt(n)/o,f=0;for(let a=0;a<6;a++){let p=Math.pow(1/n-1,a),l=0;for(let R=0;R<7;R++)l+=q1[R*6+a]*Math.pow(r-1,R);f+=p*l}let s=Math.exp(r*f);return i*s*1/1e6}var J1=[.002443221,.01323095,.006770357,-.003454586,.0004096266],D1=[1.60397357,-.646013523,.111443906,.102997357,-.0504123634,.00609859258,2.33771842,-2.78843778,1.53616167,-.463045512,.0832827019,-.00719201245,2.19650529,-4.54580785,3.55777244,-1.40944978,.275418278,-.0205938816,-1.21051378,1.60812989,-.621178141,.0716373224,0,0,-2.720337,4.57586331,-3.18369245,1.1168348,-.19268305,.012913842],P0=[[.310559006,[6.53786807199516,-5.61149954923348,3.39624167361325,-2.27492629730878,10.2631854662709,1.97815050331519]],[.776397516,[6.52717759281799,-6.30816983387575,8.08379285492595,-9.82240510197603,12.1358413791395,-5.54349664571295]],[1.242236025,[5.35500529896124,-3.96415689925446,8.91990208918795,-12.033872950579,9.19494865194302,-2.16866274479712]],[1.863354037,[1.55225959906681,.464621290821181,8.93237374861479,-11.0321960061126,6.1678099993336,-.965458722086812]],[1/0,[1.11999926419994,.595748562571649,9.8895256507892,-10.325505114704,4.66861294457414,-.503243546373828]]];function y0(e,t,n,r,o,i){w("Temperature",e),w("Density",t),t0("Temperature",e),m0("Density",t),n!==void 0&&w("Isobaric heat capacity",n),r!==void 0&&(w("Isochoric heat capacity",r),t0("Isochoric heat capacity",r)),o!==void 0&&w("Isothermal density derivative",o),i!==void 0&&(w("Dynamic viscosity",i),t0("Dynamic viscosity",i));let f=e/x,s=t/O,m=0;for(let _=0;_<5;_++)m+=J1[_]/Math.pow(f,_);let a=Math.sqrt(f)/m,p=0;for(let _=0;_<5;_++){let h=Math.pow(1/f-1,_),I=0;for(let E=0;E<6;E++)I+=D1[_*6+E]*Math.pow(s-1,E);p+=h*I}let l=Math.exp(s*p),R=0;return n!==void 0&&r!==void 0&&o!==void 0&&i!==void 0&&(R=$1(f,s,n,r,o,i)),(a*l+R)/1e3}function $1(e,t,n,r,o,i){let f=P0[P0.length-1][1];for(let[h,I]of P0)if(t<=h){f=I;break}let s=0;for(let h=0;h<6;h++)s+=f[h]*Math.pow(t,h);let m=1/s*(O/y),a=t*(y/O*o-y/O*m*1.5/e);a<0&&(a=0);let l=.13*Math.pow(a/.06,.63/1.239)/.4,R;if(l<12e-8)R=0;else{let h=n/r;R=2/(Math.PI*l)*((1-1/h)*Math.atan(l)+l/h-(1-Math.exp(-1/(1/l+l*l/(3*t*t)))))}let _=i*1e6;return 177.8514*t*(n/w0)*e/_*R}function s0(e){if(w("Temperature",e),e<273.15||e>x)return null;let t=1-e/x;return .2358*Math.pow(t,1.256)*(1-.625*t)}var z1=[.978224486826,-.957771379375,.237511794148,.714692244396,-.298217036956,-.108863472196,.0949327488264,-.00980469816509,16516763497e-15,937359795772e-16,-12317921872e-20],G1=[1,1,1,2,3,3,4,5,6,7,10],V1=[.25,1,2.5,1.5,1.5,2.5,2,2,5,.5,10];function x0(e,t){w("Temperature",e),w("Density",t),t0("Temperature",e),m0("Density",t);let n=.018015268,r=t/n,o=r/(O/n),i=1636e-43,f=60221367e16,s=6138e-33,m=1/(4e-7*Math.PI*299792458**2),a=1380658e-29,p=0;for(let _=0;_<11;_++)p+=z1[_]*Math.pow(o,G1[_])*Math.pow(x/e,V1[_]);p=1+p+.00196096504426*o*Math.pow(e/228-1,-1.2);let l=f*s*s*r*p/(m*a*e),R=f*i*r/(3*m);return(1+l+5*R+Math.sqrt(9+2*l+18*R+l*l+10*l*R+9*R*R))/(4-4*R)}function k0(e){return Math.log(e)/Math.LN10}function E0(e,t){if(w("Temperature",e),w("Density",t),t0("Temperature",e),m0("Density",t),e<273.15||e>1273.15)return null;let n=t/1e3,r=6,o=18.015268,i=.61415+48251.33/e-67707.93/(e*e)+10102100/(e*e*e),f=n*Math.exp(-.702132+8681.05/e-24145.1*Math.pow(n,2/3)/(e*e)),s=.813876-51.4471/e-.46992*n;return-2*r*(k0(1+f)-f/(f+1)*n*s)+i+2*k0(o/1e3)}function k1(e){let t=e.region===g.Region4&&e.quality!==null&&e.quality>0&&e.quality<1,n=1/e.specificVolume,r=t?null:a0(e.temperature,n),o=e.isothermalCompressibility===null?void 0:n*e.isothermalCompressibility,i=e.cp??void 0,f=e.cv??void 0;return{...e,density:n,viscosity:r,thermalConductivity:t?null:y0(e.temperature,n,i,f,o,r??void 0),surfaceTension:e.region===g.Region4?s0(e.temperature):null,dielectricConstant:t?null:x0(e.temperature,n),ionizationConstant:t?null:E0(e.temperature,n)}}function j0(e,t){if(w("Pressure",e),w("Temperature",t),e<d||e>X)throw new H("Pressure",e,d,X);if(t<L||t>f0)throw new H("Temperature",t,L,f0);if(t>W&&e>K)throw new H("Pressure",e,d,K);if(Math.abs(t-x)<d0&&Math.abs(e-y)<1e-9)throw new P(`solvePT does not support the exact critical point P=${y} MPa, T=${x} K because derivative properties become singular`);let n=G0(e,t),r;switch(n){case g.Region1:r=q(e,t);break;case g.Region2:r=b(e,t);break;case g.Region3:r=J0(e,t);break;case g.Region5:r=Q(e,t);break;default:throw new P(`Cannot determine region for P=${e} MPa, T=${t} K`)}return k1(r)}var j1=[0,1,2,3,4,5,6,7,8,9],K1=8;function $(e){if(!Number.isFinite(e))return e;for(let t of j1){let n=10**t,r=Math.round(e*n)/n,o=K1*Number.EPSILON*Math.max(1,Math.abs(e),Math.abs(r));if(Math.abs(e-r)<=o)return Object.is(r,-0)?0:r}return Object.is(e,-0)?0:e}function B(e){return e===null?null:$(e)}function K0(e){return{region:e.region,pressure:$(e.pressure),temperature:$(e.temperature),specificVolume:$(e.specificVolume),internalEnergy:$(e.internalEnergy),entropy:$(e.entropy),enthalpy:$(e.enthalpy),cp:B(e.cp),cv:B(e.cv),speedOfSound:B(e.speedOfSound),quality:B(e.quality),isobaricExpansion:B(e.isobaricExpansion),isothermalCompressibility:B(e.isothermalCompressibility)}}function Y1(e){return{...K0(e),density:$(e.density),viscosity:B(e.viscosity),thermalConductivity:B(e.thermalConductivity),surfaceTension:B(e.surfaceTension),dielectricConstant:B(e.dielectricConstant),ionizationConstant:B(e.ionizationConstant)}}function Y0(e){return"density"in e?Y1(e):K0(e)}function W1(e){return Y0(e)}function W0(e,t){return W1(j0(e,t))}globalThis.IF97=Object.freeze({solvePT:W0,saturationPressure:Y,saturationTemperature:v,viscosity:a0,surfaceTension:s0,version:"iapws-if97 2.2.0"});})();
+
+// ══════════════════════════════════════════════════════════
+// PipeCalc v7.2 RESPONSIVE FIELD — 단일 HTML / 순수 JS
+// Water/Steam: IAPWS-IF97 + IAPWS 2008 viscosity
+// Pure H2O 2-phase: isenthalpic HEM + Lockhart-Martinelli/Chisholm sensitivity
+// Other fluids: v6.2 regression-preserved models
+// ══════════════════════════════════════════════════════════
+"use strict";
+const $ = id => document.getElementById(id);
+const round = (x,n)=>{const p=10**n; return Math.round(x*p)/p;};
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const R_UNIV=8.314462618, T0=273.15;
+
+// ── 1. 물성 DB ──
+// Tc[K], Pc[Pa], omega[-]. muRef는 300 K 부근 저압 기체점도[Pa·s]의 현장근사 기준값.
+const FLUID_DB = {
+  NG:{label:'천연가스 (NG)',phase:'gas',MW:17.4,Tc:195.0,Pc:4640e3,omega:0.012,k:1.30,note:'메탄우세 의사순물질 근사',conf:'mid',mix:true,muModel:'lge'},
+  LNG_BOG:{label:'LNG BOG',phase:'gas',MW:17.0,Tc:190.0,Pc:4560e3,omega:0.011,k:1.31,note:'조성변동 큼 · 의사순물질 근사',conf:'low',mix:true,muModel:'lge'},
+  N2:{label:'질소 (N₂)',phase:'gas',MW:28.013,Tc:126.2,Pc:3390e3,omega:0.037,k:1.40,note:'순물질',conf:'high',muRef:1.76e-5,muExp:0.70},
+  AIR:{label:'공기 (Air)',phase:'gas',MW:28.96,Tc:132.5,Pc:3770e3,omega:0.035,k:1.40,note:'의사임계물성',conf:'high',mix:true,muRef:1.846e-5,muExp:0.76},
+  STEAM:{label:'수증기 (Steam)',phase:'gas',MW:18.015268,Tc:647.096,Pc:22064e3,omega:0.344,k:1.33,note:'IAPWS-IF97 Region 1~5 · IAPWS 2008 점도',conf:'high',h2o:true},
+  H2:{label:'수소 (H₂)',phase:'gas',MW:2.016,Tc:33.2,Pc:1300e3,omega:-0.216,k:1.41,note:'고압·양자효과 주의',conf:'mid',muRef:8.90e-6,muExp:0.68},
+  CO2:{label:'이산화탄소 (CO₂)',phase:'gas',MW:44.01,Tc:304.2,Pc:7383e3,omega:0.224,k:1.29,note:'임계점 부근 주의',conf:'mid',muRef:1.50e-5,muExp:0.90},
+  ETHYLENE:{label:'에틸렌 (C₂H₄)',phase:'gas',MW:28.054,Tc:282.3,Pc:5040e3,omega:0.087,k:1.24,note:'가압 시 응축 가능',conf:'high',muRef:1.04e-5,muExp:0.83},
+  PROPYLENE:{label:'프로필렌 (C₃H₆)',phase:'gas',MW:42.081,Tc:364.9,Pc:4600e3,omega:0.142,k:1.15,note:'가압 시 액화 근접',conf:'high',muRef:8.4e-6,muExp:0.86},
+  EDC_G:{label:'EDC 증기 (1,2-Dichloroethane)',phase:'gas',MW:98.959,Tc:561.6,Pc:5380e3,omega:0.268,k:1.10,note:'순물질 근사 · 독성/인화성',conf:'mid',muRef:9.5e-6,muExp:0.85,antoine:[{Tmin:242.33,Tmax:372.6,A:4.58518,B:1521.789,C:-24.67}]},
+  VCM_G:{label:'VCM 증기 (Vinyl Chloride)',phase:'gas',MW:62.498,Tc:424.61,Pc:5755e3,omega:0.160,k:1.18,note:'가압 시 쉽게 응축 · 독성/인화성',conf:'mid',muRef:1.072e-5,muExp:0.82,antoine:[{Tmin:165.3,Tmax:259.4,A:3.98598,B:892.757,C:-35.051}],vaporTable:{Tc:[-13.4,20,25],P:[101325,337305.59104,346638.1568],strictHigh:true,source:'ATSDR VCM 20·25℃ + 정상비점'}},
+  CL2_G:{label:'염소 가스 (Cl₂)',phase:'gas',MW:70.906,Tc:416.956,Pc:7991.4e3,omega:0.070,k:1.33,note:'독성 · 습식 부식/재질 적합성 별도',conf:'mid',muRef:1.34e-5,muExp:0.75,antoine:[{Tmin:155,Tmax:239.4,A:3.0213,B:530.591,C:-64.639},{Tmin:239.4,Tmax:400.3,A:4.28814,B:969.992,C:-12.791}]},
+
+  WATER:{label:'물 (Water)',phase:'liquid',MW:18.015268,Tc:647.096,Pc:22064e3,omega:0.344,note:'IAPWS-IF97 Region 1~5 · IAPWS 2008 점도',conf:'high',h2o:true},
+  COOLING_WATER:{label:'냉각수 (Cooling Water)',phase:'liquid',MW:18.015268,Tc:647.096,Pc:22064e3,omega:0.344,note:'순수 물 기준 IF97 근사 · 일반 조성은 안내만 표시',conf:'high',h2o:true,coolingWater:true},
+  METHANOL:{label:'메탄올 (CH₃OH)',phase:'liquid',MW:32.042,Tc:512.6,Pc:8096e3,omega:0.565,rhoCoef:[810.0,-0.92,0.0],muTable:{T:[0,5,10,15,20,25,30,35,40,45,50],mPaS:[0.806463,0.741477,0.683598,0.631852,0.585528,0.543900,0.506420,0.472499,0.441752,0.413853,0.388465]},validT:[0,50],note:'NIST 포화액 점도표 0~50℃ 선형보간',conf:'mid'},
+  ETHANOL:{label:'에탄올 (C₂H₅OH)',phase:'liquid',MW:46.069,Tc:514.0,Pc:6137e3,omega:0.644,rhoCoef:[806.0,-0.85,0.0],muModelL:'ethanolNist01MPa',validT:[0,50],note:'NIST 0.1 MPa 점도 참조상관식',conf:'mid'},
+  EDC_L:{label:'액체 EDC (1,2-Dichloroethane)',phase:'liquid',MW:98.959,Tc:561.6,Pc:5380e3,omega:0.268,rhoRef:1245.4,rhoRefT:25,rhoSlope:-1.52,muRefL:0.84e-3,muB:1200,validT:[-20,80],note:'ATSDR 25℃ 밀도 기준 선형 온도보정 · 독성/인화성',conf:'mid',antoine:[{Tmin:242.33,Tmax:372.6,A:4.58518,B:1521.789,C:-24.67}]},
+  VCM_L:{label:'액체 VCM (Vinyl Chloride)',phase:'liquid',MW:62.498,Tc:424.61,Pc:5755e3,omega:0.160,rhoRef20:910.6,rhoSlope:-1.55,muRefL:0.20e-3,muB:900,validT:[-40,40],note:'가압 액체 현장근사 · 독성/인화성',conf:'low',antoine:[{Tmin:165.3,Tmax:259.4,A:3.98598,B:892.757,C:-35.051}],vaporTable:{Tc:[-13.4,20,25],P:[101325,337305.59104,346638.1568],strictHigh:true,source:'ATSDR VCM 20·25℃ + 정상비점'}},
+  CL2_L:{label:'액체 염소 (Cl₂)',phase:'liquid',MW:70.906,Tc:416.956,Pc:7991.4e3,omega:0.070,rhoRef20:1408.5,rhoSlope:-2.10,muRefL:0.346e-3,muB:1000,validT:[-30,80],note:'가압 액체 현장근사 · 독성/재질 주의',conf:'low',antoine:[{Tmin:155,Tmax:239.4,A:3.0213,B:530.591,C:-64.639},{Tmin:239.4,Tmax:400.3,A:4.28814,B:969.992,C:-12.791}]},
+  LIQ_AMMONIA:{label:'액체 암모니아 (NH₃) · 직접물성',phase:'liquid',MW:17.031,Tc:405.4,Pc:11330e3,omega:0.25,custom:true,note:'운전 T·P의 ρ와 μ 직접입력 필수',conf:'manual'},
+  NAOH_AQ:{label:'NaOH 수용액',phase:'liquid',MW:0,solution:true,solutionModel:'naoh',validT:[20,100],validConc:[10,50],note:'농도·온도 2D 보간 · 실제값 입력 권장',conf:'low'},
+  CUSTOM_LIQ:{label:'기타 액체 · 직접물성',phase:'liquid',MW:0,custom:true,note:'운전조건의 ρ와 μ 직접입력 필수',conf:'manual'}
+};
+
+const MATERIALS=[
+  {key:'copper',label:'동관',eps:0.0015},{key:'ss',label:'스테인리스 (SS)',eps:0.015},
+  {key:'cs',label:'탄소강 신관',eps:0.045},{key:'galv',label:'아연도금강',eps:0.15},
+  {key:'cast',label:'주철',eps:0.26},{key:'old',label:'노후 탄소강',eps:1.0}
+];
+
+// ── ASME B36.10-2022 정본 치수 DB ──
+// ID를 임의 복사하지 않고, 표준의 OD·벽두께·표기 ID를 한 레코드로 관리한다.
+// 12" 이상은 STD/XS와 Sch 40/80이 동일하지 않으므로 별도 항목으로 분리한다.
+const PIPE_STANDARD='ASME B36.10-2022';
+const PIPE_DIMENSIONS = {
+  '1"':{od:33.4,schedules:{
+    'Sch 10':{wall:2.77,id:27.9},'Sch 40 (STD)':{wall:3.38,id:26.6},'Sch 80 (XS)':{wall:4.55,id:24.3},'Sch 160':{wall:6.35,id:20.7}}},
+  '1.5"':{od:48.3,schedules:{
+    'Sch 10':{wall:2.77,id:42.7},'Sch 40 (STD)':{wall:3.68,id:40.9},'Sch 80 (XS)':{wall:5.08,id:38.1},'Sch 160':{wall:7.14,id:33.9}}},
+  '2"':{od:60.3,schedules:{
+    'Sch 10':{wall:2.77,id:54.8},'Sch 40 (STD)':{wall:3.91,id:52.5},'Sch 80 (XS)':{wall:5.54,id:49.2},'Sch 160':{wall:8.74,id:42.8}}},
+  '3"':{od:88.9,schedules:{
+    'Sch 10':{wall:3.05,id:82.8},'Sch 40 (STD)':{wall:5.49,id:77.9},'Sch 80 (XS)':{wall:7.62,id:73.7},'Sch 160':{wall:11.13,id:66.6}}},
+  '4"':{od:114.3,schedules:{
+    'Sch 10':{wall:3.05,id:108.2},'Sch 40 (STD)':{wall:6.02,id:102.3},'Sch 80 (XS)':{wall:8.56,id:97.2},'Sch 120':{wall:11.13,id:92.0},'Sch 160':{wall:13.49,id:87.3}}},
+  '6"':{od:168.3,schedules:{
+    'Sch 10':{wall:3.40,id:161.5},'Sch 40 (STD)':{wall:7.11,id:154.1},'Sch 80 (XS)':{wall:10.97,id:146.3},'Sch 120':{wall:14.27,id:139.7},'Sch 160':{wall:18.26,id:131.8}}},
+  '8"':{od:219.1,schedules:{
+    'Sch 10':{wall:3.76,id:211.6},'Sch 20':{wall:6.35,id:206.4},'Sch 40 (STD)':{wall:8.18,id:202.7},'Sch 80 (XS)':{wall:12.70,id:193.7},'Sch 120':{wall:18.26,id:182.6},'Sch 160':{wall:23.01,id:173.1}}},
+  '10"':{od:273.0,schedules:{
+    'Sch 10':{wall:4.19,id:264.7},'Sch 20':{wall:6.35,id:260.3},'Sch 40 (STD)':{wall:9.27,id:254.5},'Sch 80':{wall:15.09,id:242.9},'Sch 120':{wall:21.44,id:230.2},'Sch 160':{wall:28.58,id:215.9}}},
+  '12"':{od:323.9,schedules:{
+    'Sch 10':{wall:4.57,id:314.7},'Sch 20':{wall:6.35,id:311.2},'Sch 40':{wall:10.31,id:303.2},'STD':{wall:9.53,id:304.8},'Sch 80':{wall:17.48,id:288.9},'XS':{wall:12.70,id:298.5},'Sch 120':{wall:25.40,id:273.1},'Sch 160':{wall:33.32,id:257.2}}},
+  '14"':{od:355.6,schedules:{
+    'Sch 10':{wall:6.35,id:342.9},'Sch 20':{wall:7.92,id:339.8},'Sch 40':{wall:11.13,id:333.3},'STD':{wall:9.53,id:336.5},'Sch 80':{wall:19.05,id:317.5},'XS':{wall:12.70,id:330.2},'Sch 120':{wall:27.79,id:300.0},'Sch 160':{wall:35.71,id:284.2}}},
+  '16"':{od:406.4,schedules:{
+    'Sch 10':{wall:6.35,id:393.7},'Sch 20':{wall:7.92,id:390.6},'Sch 40 / XS':{wall:12.70,id:381.0},'STD':{wall:9.53,id:387.4},'Sch 80':{wall:21.44,id:363.5},'Sch 120':{wall:30.96,id:344.5},'Sch 160':{wall:40.49,id:325.4}}},
+  '18"':{od:457.2,schedules:{
+    'Sch 10':{wall:6.35,id:444.5},'Sch 20':{wall:7.92,id:441.4},'Sch 40':{wall:14.27,id:428.7},'STD':{wall:9.53,id:438.2},'Sch 80':{wall:23.83,id:409.5},'XS':{wall:12.70,id:431.8},'Sch 120':{wall:34.92,id:387.4},'Sch 160':{wall:45.24,id:366.5}}},
+  '20"':{od:508.0,schedules:{
+    'Sch 10':{wall:6.35,id:495.3},'Sch 20 / STD':{wall:9.53,id:489.0},'Sch 40':{wall:15.09,id:477.8},'Sch 80':{wall:26.19,id:455.6},'XS':{wall:12.70,id:482.6},'Sch 120':{wall:38.10,id:431.8},'Sch 160':{wall:50.01,id:407.9}}},
+  '24"':{od:609.6,schedules:{
+    'Sch 10':{wall:6.35,id:596.9},'Sch 20 / STD':{wall:9.53,id:590.6},'Sch 40':{wall:17.48,id:574.6},'Sch 80':{wall:30.96,id:547.7},'XS':{wall:12.70,id:584.2},'Sch 120':{wall:46.02,id:517.6},'Sch 160':{wall:59.54,id:490.5}}},
+  '30"':{od:762.0,schedules:{
+    'Sch 10':{wall:7.92,id:746.2},'Sch 20 / XS':{wall:12.70,id:736.6},'STD':{wall:9.53,id:742.9}}},
+  '36"':{od:914.4,schedules:{
+    'Sch 10':{wall:7.92,id:898.6},'Sch 20 / XS':{wall:12.70,id:889.0},'STD':{wall:9.53,id:895.3}}}
+};
+const PIPE_ID=Object.fromEntries(Object.entries(PIPE_DIMENSIONS).map(([nps,p])=>[
+  nps,Object.fromEntries(Object.entries(p.schedules).map(([sch,s])=>[sch,s.id]))
+]));
+const NPS_LIST=Object.keys(PIPE_DIMENSIONS);
+const schListFor=nps=>Object.keys(PIPE_DIMENSIONS[nps]?.schedules||{});
+const pipeSpecFor=(nps,sch)=>{const p=PIPE_DIMENSIONS[nps],s=p?.schedules?.[sch];return p&&s?{standard:PIPE_STANDARD,nps,sch,od:p.od,wall:s.wall,id:s.id}:null;};
+function pickCompatibleSchedule(previous,list){
+  if(list.includes(previous))return previous;
+  const wantsXS=/(^|[\s/()])XS($|[\s/()])/.test(previous);
+  const wantsSTD=/(^|[\s/()])STD($|[\s/()])/.test(previous);
+  if(wantsXS){const x=list.find(s=>s==='XS'||/Sch 80.*XS|XS.*Sch 80|Sch 20.*XS|XS.*Sch 20/.test(s))||list.find(s=>/Sch 80/.test(s));if(x)return x;}
+  if(wantsSTD){const x=list.find(s=>s==='STD'||/Sch 40.*STD|STD.*Sch 40|Sch 20.*STD|STD.*Sch 20/.test(s))||list.find(s=>/Sch 40/.test(s));if(x)return x;}
+  if(/Sch 20/.test(previous)){const x=list.find(s=>/Sch 20/.test(s));if(x)return x;}
+  if(/Sch 40/.test(previous)){const x=list.find(s=>s==='Sch 40'||s.startsWith('Sch 40'));if(x)return x;}
+  if(/Sch 80/.test(previous)){const x=list.find(s=>s==='Sch 80'||s.startsWith('Sch 80'));if(x)return x;}
+  return list.find(s=>s==='STD')||list.find(s=>/Sch 40/.test(s))||list[0];
+}
+
+const PRES_PRESETS = {
+  STEAM:{note:'스팀 헤더 전형값. 반드시 실제 헤더압 확인',items:[['LP',3.5],['MP',10],['HP',42],['VHP',100]]},
+  AIR:{note:'플랜트/계장 Air 전형값',items:[['Plant',6],['Instrument',7]]},
+  N2:{note:'질소 용도별 전형값',items:[['Purge',0.5],['Header',8]]},
+  NG:{note:'천연가스 용도별 전형값',items:[['Fuel',4],['Supply',20]]},
+  COOLING_WATER:{note:'냉각수 공급 전형값',items:[['Supply',4]]},
+  EDC_L:{note:'EDC 액체 운전압은 온도·공정별 상이',items:[['예시',5]]},
+  VCM_L:{note:'VCM 액상 유지압은 온도별 포화압력 이상 필요',items:[['예시',8]]},
+  CL2_L:{note:'액체 염소는 온도별 액상 유지압 확인 필수',items:[['예시',10]]}
+};
+const GAS_FLOWUNITS=['Nm³/h','kg/h','m³/h'];
+const LIQ_FLOWUNITS=['m³/h','kg/h'];
+const ALLOWANCES=[
+  {label:'0% (직관만)',v:0},{label:'+10% (단순)',v:0.10},{label:'+20% (일반)',v:0.20},{label:'+30% (복잡)',v:0.30},{label:'+50% (매우 복잡)',v:0.50}
+];
+
+// ── 2. Z-factor: Pitzer / DAK / Peng-Robinson ──
+function zPitzer(T,P,f){
+  const Tr=T/f.Tc, Pr=P/f.Pc;
+  const B0=0.083-0.422/Math.pow(Tr,1.6), B1=0.139-0.172/Math.pow(Tr,4.2);
+  const Z=1+(B0+f.omega*B1)*Pr/Tr;
+  return {Z,Tr,Pr,reliable:(Tr>=0.6&&Pr<=3.0&&Z>0.15&&Z<2.5)};
+}
+function zStandingKatz(T,P,f){
+  const Tpr=T/f.Tc, Ppr=P/f.Pc;
+  const A=[0.3265,-1.0700,-0.5339,0.01569,-0.05165,0.5475,-0.7361,0.1844,0.1056,0.6134,0.7210];
+  const t=1/Tpr; let r=Math.max(1e-6,0.27*Ppr/Tpr), converged=false;
+  for(let i=0;i<60;i++){
+    const c1=A[0]+A[1]*t+A[2]*t**3+A[3]*t**4+A[4]*t**5;
+    const c2=A[5]+A[6]*t+A[7]*t**2, c3=A[8]*(A[6]*t+A[7]*t**2);
+    const e=Math.exp(-A[10]*r**2);
+    const Zc=1+c1*r+c2*r**2-c3*r**5+A[9]*(1+A[10]*r**2)*(r**2/Tpr**3)*e;
+    const rn=0.27*Ppr/(Math.max(0.05,Zc)*Tpr);
+    if(Math.abs(rn-r)<1e-9){r=rn; converged=true; break;}
+    r=0.55*r+0.45*rn; // 발산 완화
+  }
+  const Z=0.27*Ppr/(Math.max(1e-9,r)*Tpr);
+  return {Z,Tpr,Ppr,Tr:Tpr,Pr:Ppr,converged,reliable:(converged&&Tpr>=1.05&&Tpr<=3.0&&Ppr>=0.2&&Ppr<=15&&Z>0.15&&Z<2.5)};
+}
+function cbrt(x){return Math.sign(x)*Math.pow(Math.abs(x),1/3);}
+function cubicRealRoots(a,b,c){ // x³+a x²+b x+c=0
+  const p=b-a*a/3, q=2*a*a*a/27-a*b/3+c;
+  const disc=q*q/4+p*p*p/27;
+  if(disc>=-1e-14){
+    const s=Math.sqrt(Math.max(0,disc));
+    return [cbrt(-q/2+s)+cbrt(-q/2-s)-a/3];
+  }
+  const m=2*Math.sqrt(-p/3), arg=clamp((3*q/(2*p))*Math.sqrt(-3/p),-1,1), th=Math.acos(arg)/3;
+  return [m*Math.cos(th)-a/3,m*Math.cos(th-2*Math.PI/3)-a/3,m*Math.cos(th-4*Math.PI/3)-a/3];
+}
+function zPengRobinson(T,P,f){
+  const Tr=T/f.Tc, Pr=P/f.Pc;
+  const kap=0.37464+1.54226*f.omega-0.26992*f.omega*f.omega;
+  const alpha=(1+kap*(1-Math.sqrt(Tr)))**2;
+  const aa=0.45724*R_UNIV*R_UNIV*f.Tc*f.Tc/f.Pc*alpha;
+  const bb=0.07780*R_UNIV*f.Tc/f.Pc;
+  const A=aa*P/(R_UNIV*R_UNIV*T*T), B=bb*P/(R_UNIV*T);
+  const roots=cubicRealRoots(-(1-B),A-3*B*B-2*B,-(A*B-B*B-B**3)).filter(z=>Number.isFinite(z)&&z>B+1e-8);
+  const Z=roots.length?Math.max(...roots):NaN;
+  return {Z,Tr,Pr,A,B,reliable:Number.isFinite(Z)&&Z>0.05&&Z<5};
+}
+function selectZ(T,P,f){
+  const pit=zPitzer(T,P,f), sk=zStandingKatz(T,P,f), pr=zPengRobinson(T,P,f);
+  const nearCritical=Math.abs(T/f.Tc-1)<0.10&&Math.abs(P/f.Pc-1)<0.45;
+  let by='Pitzer', chosen=pit;
+  if(f.mix&&(f.label.includes('NG')||f.label.includes('BOG'))){
+    if(sk.reliable&&!nearCritical){by='DAK'; chosen=sk;} else {by='PR'; chosen=pr;}
+  }else if(f.preferPR||!pit.reliable||nearCritical){by='PR'; chosen=pr;}
+  const valid=[pit,sk,pr].filter(x=>Number.isFinite(x.Z)&&x.Z>0);
+  const vals=valid.map(x=>x.Z);
+  const spread=vals.length>1?(Math.max(...vals)-Math.min(...vals))/Math.max(0.05,chosen.Z)*100:0;
+  return {Z:chosen.Z,by,pitzer:pit,sk,pr,spread,nearCritical,reliable:chosen.reliable};
+}
+
+// ── 3. 물성 ──
+function gasDensity(T,P,f,Z){return P*(f.MW/1000)/(Z*R_UNIV*T);}
+const GAS_Z_GUARD={hardMin:0.10,hardMax:3.00,warnMin:0.20,warnMax:2.00,ratioMin:0.50,ratioMax:2.00};
+function evaluateGasZ(Z,modelZ,source){
+  const messages=[];
+  if(!Number.isFinite(Z)||Z<=GAS_Z_GUARD.hardMin||Z>GAS_Z_GUARD.hardMax){
+    return {level:'danger',ratio:Number.isFinite(modelZ)&&modelZ>0?Z/modelZ:NaN,messages:[`Z=${Number.isFinite(Z)?round(Z,4):'NaN'}가 계산 허용범위(${GAS_Z_GUARD.hardMin}<Z≤${GAS_Z_GUARD.hardMax}) 밖입니다. ρ·Z·압력·온도 입력을 확인하세요.`]};
+  }
+  if(Z<GAS_Z_GUARD.warnMin||Z>GAS_Z_GUARD.warnMax)messages.push(`Z=${round(Z,4)}가 일반 현장 sanity 범위(${GAS_Z_GUARD.warnMin}~${GAS_Z_GUARD.warnMax}) 밖입니다.`);
+  const ratio=Number.isFinite(modelZ)&&modelZ>0?Z/modelZ:NaN;
+  if(source!=='model'&&Number.isFinite(ratio)&&(ratio<GAS_Z_GUARD.ratioMin||ratio>GAS_Z_GUARD.ratioMax))messages.push(`입력 기반 Z/자동모델 Z=${round(ratio,3)}로 차이가 2배를 넘습니다.`);
+  return {level:messages.length?'warn':'ok',ratio,messages};
+}
+function resolveGasState(T,P,f,modelZ){
+  const Rs=R_UNIV/(f.MW/1000);
+  if(Number.isFinite(state.override.rho)&&state.override.rho>0){
+    const Z=P/(state.override.rho*Rs*T),check=evaluateGasZ(Z,modelZ,'rho');
+    return {Z,rho:state.override.rho,source:'rho',label:'ρ 직접입력 → Z_eff 역산',zCheck:check};
+  }
+  const hasZ=Number.isFinite(state.override.Z)&&state.override.Z>0;
+  const Z=hasZ?state.override.Z:modelZ,source=hasZ?'Z':'model',check=evaluateGasZ(Z,modelZ,source);
+  return {Z,rho:gasDensity(T,P,f,Z),source,label:hasZ?'Z 직접입력':'자동 Z 모델',zCheck:check};
+}
+function gasViscosityLGE(T,f,rho){
+  const M=f.MW, TR=T*1.8;
+  const K=(9.4+0.02*M)*Math.pow(TR,1.5)/(209+19*M+TR);
+  const X=3.5+986/TR+0.01*M, Y=2.4-0.2*X;
+  return 1e-4*K*Math.exp(X*Math.pow(rho/1000,Y))*1e-3;
+}
+function gasViscosity(T,f,rho){
+  if(f.muModel==='lge') return {mu:gasViscosityLGE(T,f,rho),method:'Lee-Gonzalez-Eakin'};
+  const base=(f.muRef||1.5e-5)*Math.pow(T/300,f.muExp||0.75);
+  const denseCorr=1+Math.min(0.35,Math.max(0,rho)*0.00045);
+  return {mu:base*denseCorr,method:'유체별 기준점·온도지수 근사'};
+}
+const NAOH_T=[20,30,40,50,60,70,80,90,100];
+const NAOH_C=[0,5,10,15,20,25,30,35,40,45,50];
+const NAOH_MU=[
+  [0.97,0.78,0.64,0.54,0.46,0.40,0.35,0.315,0.28],
+  [1.31,1.03,0.83,0.69,0.58,0.50,0.43,0.375,0.33],
+  [1.86,1.43,1.14,0.93,0.78,0.66,0.55,0.47,0.40],
+  [2.78,2.07,1.62,1.31,1.08,0.90,0.73,0.62,0.51],
+  [4.43,3.17,2.43,1.93,1.57,1.26,1.03,0.84,0.68],
+  [7.45,5.15,3.76,2.87,2.26,1.80,1.44,1.16,0.94],
+  [12.6,8.43,5.99,4.38,3.28,2.55,2.02,1.62,1.28],
+  [21.6,13.4,9.23,6.41,4.71,3.57,2.79,2.20,1.75],
+  [38.1,21.8,13.5,9.0,6.36,4.76,3.69,2.89,2.29],
+  [68.0,32.8,18.9,12.1,8.37,6.13,4.62,3.63,2.85],
+  [120.0,47.7,25.5,15.8,10.4,7.60,5.60,4.36,3.41]
+];
+function bracket(arr,x){if(x<=arr[0])return[0,0,0];if(x>=arr[arr.length-1]){const n=arr.length-1;return[n,n,0];}for(let i=0;i<arr.length-1;i++)if(x>=arr[i]&&x<=arr[i+1])return[i,i+1,(x-arr[i])/(arr[i+1]-arr[i])];return[0,0,0];}
+function bilerp(table,xs,ys,x,y){const[x0,x1,tx]=bracket(xs,x),[y0,y1,ty]=bracket(ys,y);const a=table[x0][y0]*(1-ty)+table[x0][y1]*ty,b=table[x1][y0]*(1-ty)+table[x1][y1]*ty;return a*(1-tx)+b*tx;}
+function naohProperties(Tc,conc){
+  const c=clamp(conc,0,50),t=clamp(Tc,20,100);
+  const rho=1000*(1.0200+0.0105*c-(0.0005+0.0000049*c)*t);
+  const muCp=bilerp(NAOH_MU,NAOH_C,NAOH_T,c,t);
+  return {rho,mu:muCp*1e-3,clamped:(conc<0||conc>50||Tc<20||Tc>100)};
+}
+function interp1D(xs,ys,x){
+  if(x<=xs[0])return ys[0];
+  if(x>=xs[xs.length-1])return ys[ys.length-1];
+  for(let i=0;i<xs.length-1;i++)if(x>=xs[i]&&x<=xs[i+1]){const t=(x-xs[i])/(xs[i+1]-xs[i]);return ys[i]*(1-t)+ys[i+1]*t;}
+  return NaN;
+}
+function liquidDensity(Tc,f){
+  if(f.rhoCoef)return f.rhoCoef.reduce((sum,a,i)=>sum+a*Math.pow(Tc,i),0);
+  if(f.rhoRef!=null)return f.rhoRef+(f.rhoSlope||0)*(Tc-(f.rhoRefT??20));
+  if(f.rhoRef20!=null)return f.rhoRef20+(f.rhoSlope||0)*(Tc-20);
+  return NaN;
+}
+function liquidViscosity(Tc,f){
+  const T=Tc+T0;
+  if(f.muTable)return interp1D(f.muTable.T,f.muTable.mPaS,Tc)*1e-3;
+  if(f.muModelL==='ethanolNist01MPa'){
+    const th=273.15/T;
+    return Math.exp(-0.721846*th**4+5.91281*th**3-15.0092*th**2+20.9305*th-3.62716)*1e-6;
+  }
+  if(f.muCoef){const m=f.muCoef;if(m.type==='vogel')return m.A*Math.pow(10,m.B/(T-m.C));return m.A*Math.exp(m.B/T);}
+  if(f.muRefL!=null)return f.muRefL*Math.exp((f.muB||1000)*(1/T-1/293.15));
+  return NaN;
+}
+function liquidModelName(f){if(f.solutionModel==='naoh')return 'NaOH 농도·온도 2D 보간';if(f.muTable)return 'NIST 포화액 점도표 선형보간';if(f.muModelL==='ethanolNist01MPa')return 'NIST 0.1 MPa 참조상관식';if(f.muCoef)return f.muCoef.type==='vogel'?'Vogel':'Arrhenius';if(f.muRefL!=null)return '기준점·Andrade 온도보정';return '직접 입력';}
+const H2O_KEYS=new Set(['STEAM','WATER','COOLING_WATER']);
+const H2O_PT=0.000611657,H2O_PC=22.064,H2O_TC=647.096,H2O_CALC_TMAX=1173.15;
+const H2O_TP_PMIN=0.1e6,H2O_TP_PMAX=10e6,H2O_TP_XMIN=0.01,H2O_TP_XMAX=0.99,H2O_TP_MODEL_DIFF_HOLD=30;
+const GL_XMIN=0.001,GL_XMAX=0.999,GL_MODEL_DIFF_HOLD=30,GL_SLOPE_MAX=0.01,GL_DP_RATIO_MAX=0.10,GL_RHO_RATIO_MIN=3,GL_PABS_MIN=0.2e5;
+const isH2OKey=key=>H2O_KEYS.has(key);
+const phaseNameKo=phase=>phase==='gas'?'증기(Vapor)':phase==='liquid'?'액체(Liquid)':phase==='supercritical'?'초임계 단상(Supercritical)':phase==='saturation'?'포화경계(Saturation)':'미산정';
+function if97StatePT(P,T,expectedPhase){
+  const pMPa=P/1e6;
+  if(!globalThis.IF97)throw new Error('내장 IAPWS-IF97 엔진을 불러오지 못했습니다.');
+  if(!Number.isFinite(P)||!Number.isFinite(T)||P<=0||T<273.15||T>2273.15||pMPa>100||(T>1073.15&&pMPa>50)){
+    return {ok:false,level:'danger',title:'IF97 적용범위 밖',msg:'IAPWS-IF97 유효범위(0~800℃ 구간 최대 100 MPa, 800~2000℃ 구간 최대 50 MPa)를 벗어났습니다.'};
+  }
+  let Psat=null,Tsat=null,satMarginK=null,actualPhase=T>H2O_TC?(pMPa>H2O_PC?'supercritical':'gas'):'liquid';
+  try{
+    if(T<=H2O_TC)Psat=IF97.saturationPressure(T)*1e6;
+    if(pMPa>=H2O_PT&&pMPa<H2O_PC)Tsat=IF97.saturationTemperature(pMPa);
+  }catch(_e){/* 포화 보조식 끝점에서는 아래 상태식만 사용 */}
+  if(Psat!=null&&Number.isFinite(Psat)){
+    const rel=(P-Psat)/Psat;
+    actualPhase=Math.abs(rel)<=2e-6?'saturation':rel>0?'liquid':'gas';
+  }
+  if(Tsat!=null&&Number.isFinite(Tsat))satMarginK=T-Tsat;
+  const criticalDistance=Math.hypot((T-H2O_TC)/5,(pMPa-H2O_PC)/1);
+  if(Math.abs(T-H2O_TC)<0.02&&Math.abs(pMPa-H2O_PC)<0.02){
+    return {ok:false,level:'danger',title:'임계점 계산 중단',msg:'임계점에서는 물성 미분값이 매우 민감하므로 정상 배관 결과를 산정하지 않습니다.',actualPhase:'supercritical',Psat,Tsat,satMarginK,pMPa,T};
+  }
+  let raw;
+  try{raw=IF97.solvePT(pMPa,T);}catch(e){return {ok:false,level:'danger',title:'IF97 상태 계산 실패',msg:e.message||String(e),actualPhase,Psat,Tsat,satMarginK,pMPa,T};}
+  const rho=raw.density,mu=raw.viscosity,a=raw.speedOfSound,cp=raw.cp,cv=raw.cv;
+  if(!(rho>0)||!(mu>0)||!(a>0)||!(raw.isothermalCompressibility>0)){
+    return {ok:false,level:'danger',title:'IF97 미분 물성 계산 실패',msg:'밀도·점도·음속·등온압축률 중 유효하지 않은 값이 있습니다.',actualPhase,Psat,Tsat,satMarginK,pMPa,T,raw};
+  }
+  const Z=P*(18.015268e-3)/(rho*R_UNIV*T);
+  const k=cp&&cv?cp/cv:null;
+  let level='ok',title=`IF97 Region ${raw.region} · ${phaseNameKo(actualPhase)}`,msg='IAPWS-IF97 단상 물성을 적용합니다.';
+  if(actualPhase==='saturation'){
+    level='danger';title='포화선 도달';msg='압력과 온도가 포화선에 있어 P,T만으로 증기 품질 x를 정할 수 없습니다.';
+  }else if(actualPhase!=='supercritical'&&expectedPhase&&actualPhase!==expectedPhase){
+    level='danger';title='선택 상과 IF97 상태 불일치';msg=`현재 P,T는 ${phaseNameKo(actualPhase)}입니다. 선택한 ${phaseNameKo(expectedPhase)} 단상 계산을 사용할 수 없습니다.`;
+  }else if(T>H2O_CALC_TMAX){
+    level='danger';title='900℃ 초과 · 배관 계산 HOLD';msg='IF97 열역학 물성은 표시할 수 있으나 IAPWS 2008 점도 정상 권장범위를 넘어 배관 계산을 중단합니다.';
+  }else if((satMarginK!=null&&Math.abs(satMarginK)<2)||criticalDistance<1){
+    level='warn';title=satMarginK!=null&&Math.abs(satMarginK)<2?'포화온도 여유 2℃ 미만':'임계점 근접';msg=satMarginK!=null&&Math.abs(satMarginK)<2?`포화온도와의 차이가 ${round(Math.abs(satMarginK),3)}℃입니다. 작은 온도·압력 오차로 상이 바뀔 수 있습니다.`:'임계점 부근에서는 물성과 압력강하가 입력 오차에 민감합니다.';
+  }else if(actualPhase==='supercritical'){
+    level='warn';title=`IF97 Region ${raw.region} · 초임계 단상`;msg='기액 포화선은 없지만 물성 민감도가 높을 수 있어 상세검증을 권장합니다.';
+  }
+  return {ok:true,level,title,msg,actualPhase,Psat,Tsat,satMarginK,pMPa,T,region:raw.region,rho,mu,a,cp,cv,h:raw.enthalpy,s:raw.entropy,k,Z,kappaT:raw.isothermalCompressibility/1e6,raw};
+}
+function estimateProperties(key,Tc,Pbarg){
+  const f=FLUID_DB[key]; if(!f) return {ok:false};
+  const T=Tc+T0,P=(Pbarg+1.01325)*1e5;
+  if(P<=0||T<=0) return {ok:false,error:'절대압력 또는 절대온도가 0 이하'};
+  if(f.h2o){
+    const hs=if97StatePT(P,T,f.phase);
+    if(!hs.ok&&hs.raw==null)return {ok:true,phase:f.phase,MW:f.MW,k:null,Z:null,rho:hs.raw?.density??NaN,mu:hs.raw?.viscosity??NaN,note:f.note,conf:f.conf,T,P,h2o:true,h2oState:hs,calcBlocked:true};
+    return {ok:true,phase:f.phase,MW:f.MW,k:hs.k,Z:hs.Z,rho:hs.rho,mu:hs.mu,muMethod:'IAPWS 2008 (임계증대항 생략)',zc:null,note:f.note,conf:f.conf,T,P,h2o:true,h2oState:hs,calcBlocked:hs.level==='danger'};
+  }
+  if(f.phase==='gas'){
+    const zc=selectZ(T,P,f),Z=zc.Z;
+    if(!Number.isFinite(Z)||Z<=0) return {ok:false,error:'Z 계산 실패'};
+    const rho=gasDensity(T,P,f,Z), muv=gasViscosity(T,f,rho);
+    return {ok:true,phase:'gas',MW:f.MW,k:f.k,Z,rho,mu:muv.mu,muMethod:muv.method,zc,note:f.note,conf:f.conf,T,P};
+  }
+  if(f.solutionModel==='naoh'){
+    const conc=parseFloat($('conc')?.value);
+    if(!Number.isFinite(conc)) return {ok:false,error:'NaOH 농도를 입력하세요.'};
+    const p=naohProperties(Tc,conc);
+    return {ok:true,phase:'liquid',MW:0,rho:p.rho,mu:p.mu,note:f.note,conf:f.conf,T,P,conc,propertyClamped:p.clamped};
+  }
+  if(f.custom){
+    const rho=state.override.rho,mu=state.override.mu;
+    return {ok:(rho>0&&mu>0),needsManual:true,phase:'liquid',MW:f.MW,rho,mu,note:f.note,conf:f.conf,T,P,error:(rho>0&&mu>0)?null:'밀도(ρ)와 점도(μ)를 직접 입력하세요.'};
+  }
+  const rho=liquidDensity(Tc,f),mu=liquidViscosity(Tc,f);
+  return {ok:true,phase:'liquid',MW:f.MW,rho,mu,note:f.note,conf:f.conf,T,P};
+}
+
+// ── 4. 상변화 스크리닝: Lee-Kesler/Pitzer 일반화 증기압 근사 ──
+function vaporTablePressure(Tc,table){
+  const xs=table.Tc,ys=table.P;
+  if(Tc<xs[0]||Tc>xs[xs.length-1])return null;
+  if(Tc===xs[0])return ys[0];
+  for(let i=0;i<xs.length-1;i++)if(Tc>=xs[i]&&Tc<=xs[i+1]){
+    const T1=xs[i]+T0,T2=xs[i+1]+T0,T=Tc+T0;
+    const q=(1/T-1/T1)/(1/T2-1/T1);
+    return Math.exp(Math.log(ys[i])+q*(Math.log(ys[i+1])-Math.log(ys[i])));
+  }
+  return null;
+}
+function vaporPressureApprox(T,f){
+  if(!f.Tc||!f.Pc||f.omega==null||f.mix||f.solution||T>=f.Tc) return null;
+  const Tc=T-T0;
+  // 유체별 Antoine식이 있으면 해당 유효온도에서 우선 사용 (P: bar, T: K)
+  if(f.antoine){
+    const seg=f.antoine.find(x=>T>=x.Tmin&&T<=x.Tmax);
+    if(seg) return Math.pow(10,seg.A-seg.B/(T+seg.C))*1e5;
+  }
+  // VCM 상온 구간은 ATSDR 기준점 사이를 ln(P)-1/T로 보간한다.
+  if(f.vaporTable){
+    const p=vaporTablePressure(Tc,f.vaporTable);
+    if(p) return p;
+    if(f.vaporTable.strictHigh&&Tc>f.vaporTable.Tc[f.vaporTable.Tc.length-1])return null;
+  }
+  // 물/냉각수는 현장 사용 빈도가 높아 Antoine 포화압력식을 우선 사용
+  if(f===FLUID_DB.WATER||f===FLUID_DB.COOLING_WATER){
+    let A,B,C;
+    if(Tc>=1&&Tc<=100){A=8.07131;B=1730.63;C=233.426;}
+    else if(Tc>100&&Tc<374){A=8.14019;B=1810.94;C=244.485;}
+    if(A) return Math.pow(10,A-B/(C+Tc))*133.322368;
+  }
+  const Tr=T/f.Tc;
+  if(Tr<=0.30||Tr>=1) return null;
+  const f0=5.92714-6.09648/Tr-1.28862*Math.log(Tr)+0.169347*Tr**6;
+  const f1=15.2518-15.6875/Tr-13.4721*Math.log(Tr)+0.43577*Tr**6;
+  const Pr=Math.exp(f0+f.omega*f1);
+  return Pr*f.Pc;
+}
+function phaseScreen(key,T,P1,P2,phase){
+  const f=FLUID_DB[key],Tr=f.Tc?T/f.Tc:null,Pr1=f.Pc?P1/f.Pc:null;
+  if(isH2OKey(key)){
+    const s1=if97StatePT(P1,T,phase),s2=P2>0?if97StatePT(P2,T,phase):null;
+    const bad=!s1.ok||s1.level==='danger'||!s2?.ok||s2?.level==='danger';
+    const warn=!bad&&(s1.level==='warn'||s2?.level==='warn');
+    const chosen=bad?(!s1.ok||s1.level==='danger'?s1:s2):warn?(s2?.level==='warn'?s2:s1):s2||s1;
+    return {level:bad?'danger':warn?'warn':'ok',title:chosen.title,msg:chosen.msg,Psat:chosen.Psat,Tsat:chosen.Tsat,satMarginK:chosen.satMarginK,region:chosen.region,Tr,Pr1};
+  }
+  if(f.solution) return {level:'unknown',title:'상변화 판정 제외',msg:'수용액은 농도별 증기압 데이터가 없어 자동 2상 판정을 하지 않습니다.',Tr,Pr1};
+  if(f.mix) return {level:'unknown',title:'혼합물 상평형 미지원',msg:'조성 입력이 없어 Dew/Bubble Point를 계산하지 않습니다. NG·BOG는 상변화 여유를 별도 확인하세요.',Tr,Pr1};
+  const nearCritical=f.Tc&&f.Pc&&Math.abs(Tr-1)<0.10&&Math.abs(Pr1-1)<0.45;
+  if(nearCritical) return {level:'warn',title:'임계점 부근',msg:`Tr=${round(Tr,3)}, Pr=${round(Pr1,3)} — 밀도와 Z가 급변할 수 있어 오차를 크게 확대했습니다.`,Tr,Pr1,nearCritical:true};
+  if(f.Tc&&T>=f.Tc){
+    return {level:'ok',title:'임계온도 이상',msg:'단순 포화선에 의한 기액 경계는 없지만 고밀도·초임계 영역은 상세검증이 필요합니다.',Tr,Pr1};
+  }
+  const Psat=vaporPressureApprox(T,f);
+  if(!Psat) return {level:'unknown',title:'상변화 판정 제한',msg:'현재 온도에서 사용할 수 있는 포화압력 근사가 없습니다.',Tr,Pr1};
+  const r1=P1/Psat,r2=P2/Psat,psatBara=Psat/1e5;
+  if(phase==='liquid'){
+    if(r1<=1.02) return {level:'danger',title:'입구부터 Flash/2상 가능',msg:`입구 절대압력이 추정 Psat(${round(psatBara,3)} bara) 이하입니다. 단상 액체 계산은 유효하지 않습니다.`,Psat,Tr,Pr1};
+    if(r2<=1.02) return {level:'danger',title:'배관 중 Flash/2상 가능',msg:`계산 출구압이 추정 Psat(${round(psatBara,3)} bara) 이하입니다. 결과는 단상 가정값이며 2상 압력강하는 계산하지 않습니다.`,Psat,Tr,Pr1};
+    if(r2<1.20) return {level:'warn',title:'Flash 여유 작음',msg:`출구 절대압력이 추정 Psat의 ${round(r2,2)}배입니다. 온도·조성 오차로 2상이 발생할 수 있습니다.`,Psat,Tr,Pr1};
+    return {level:'ok',title:'단상 액체 여유 확인',msg:`출구 절대압력/Psat ≈ ${round(r2,2)}. 포화선 기준 단상 유지 가능성이 높습니다.`,Psat,Tr,Pr1};
+  }
+  if(r1>1.10) return {level:'danger',title:'선택 상(기체) 불일치 가능',msg:`입구압이 추정 Psat(${round(psatBara,3)} bara)보다 높습니다. 기체가 아니라 액체/2상일 수 있습니다.`,Psat,Tr,Pr1};
+  if(r1>0.85) return {level:'warn',title:'포화선 근접',msg:`입구압이 추정 Psat에 가깝습니다(P/Psat=${round(r1,2)}). 응축·조성 영향을 확인하세요.`,Psat,Tr,Pr1};
+  return {level:'ok',title:'단상 기체 여유 확인',msg:`입구 절대압력/Psat ≈ ${round(r1,2)}. 등온 압력강하만으로 응축될 가능성은 낮습니다.`,Psat,Tr,Pr1};
+}
+
+// ── 5. 마찰계수 ──
+function colebrook(Re,relEps){
+  if(!Number.isFinite(Re)||Re<=0) return NaN;
+  if(Re<2300) return 64/Re;
+  let ff=0.02;
+  for(let i=0;i<50;i++){
+    const rhs=-2*Math.log10(relEps/3.7+2.51/(Re*Math.sqrt(ff)));
+    const fn=1/(rhs*rhs); if(Math.abs(fn-ff)<1e-8){ff=fn;break;} ff=fn;
+  }
+  return ff;
+}
+
+// ── 6. 상태/UI / 현장 기준 설정 ──
+const PROFILE_META={
+  general:{name:'일반 배관',desc:'범용 현장 1차 검토값입니다. 사내 설계기준이 있으면 수정하세요.'},
+  pump:{name:'펌프 전단(Suction)',desc:'흡입측 손실과 유속을 보수적으로 제한합니다. NPSHa/NPSHr 검토는 별도입니다.'},
+  cw:{name:'냉각수(CW) 배관',desc:'일반 냉각수 순환배관의 현장 스크리닝용 예시값입니다.'},
+  header:{name:'공용 헤더(Header)',desc:'다수 사용처에 영향을 주는 헤더를 보수적으로 확인하는 예시값입니다.'},
+  custom:{name:'사용자 정의',desc:'현장 또는 사내 기준을 직접 저장하는 프로파일입니다.'}
+};
+const DEFAULT_SETTINGS={activeProfile:'general',profiles:{
+  general:{liqV:3.0,gasV:30,liqDP:0.50,gasDP:0.50,mach:0.30,minOut:null},
+  pump:{liqV:1.5,gasV:20,liqDP:0.10,gasDP:0.30,mach:0.20,minOut:null},
+  cw:{liqV:2.5,gasV:25,liqDP:0.30,gasDP:0.40,mach:0.25,minOut:null},
+  header:{liqV:2.0,gasV:20,liqDP:0.25,gasDP:0.25,mach:0.20,minOut:null},
+  custom:{liqV:3.0,gasV:30,liqDP:0.50,gasDP:0.50,mach:0.30,minOut:null}
+}};
+const SETTINGS_KEY='pipecalc_v7_settings';
+function clone(o){return JSON.parse(JSON.stringify(o));}
+function loadSettings(){try{const x=JSON.parse(localStorage.getItem(SETTINGS_KEY)||'null');if(!x)return clone(DEFAULT_SETTINGS);const merged=clone(DEFAULT_SETTINGS);merged.activeProfile=x.activeProfile&&PROFILE_META[x.activeProfile]?x.activeProfile:'general';for(const k of Object.keys(PROFILE_META))merged.profiles[k]={...merged.profiles[k],...(x.profiles?.[k]||{})};return merged;}catch{return clone(DEFAULT_SETTINGS);}}
+let appSettings=loadSettings();
+function persistSettings(){try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(appSettings));}catch(e){console.warn('설정 저장 불가:',e);}}
+const state={phase:'gas',fluid:'NG',flowUnit:'Nm³/h',nps:'6"',sch:'Sch 40 (STD)',mat:'cs',allowance:0.20,override:{},calcMode:'single'};
+let lastResult=null,currentView='calc';
+function invalidateResult(){
+  lastResult=null;
+  $('resultDock')?.classList.remove('show');
+  $('resultScrim')?.classList.remove('show');
+  if($('resultDetail'))$('resultDetail').innerHTML='';
+  if($('dockStatus')){$('dockStatus').className='dock-status';$('dockStatus').textContent='—';}
+  if($('dockTitle'))$('dockTitle').textContent='계산 결과';
+  if($('dockSub'))$('dockSub').textContent='입력 변경 후 다시 계산';
+}
+function currentProfile(){return appSettings.profiles[appSettings.activeProfile];}
+function currentProfileName(){return PROFILE_META[appSettings.activeProfile].name;}
+function activeLimitFor(phase){const p=currentProfile();return phase==='gas'?{V:p.gasV,dP100:p.gasDP,Ma:p.mach,minOut:p.minOut}:{V:p.liqV,dP100:p.liqDP,minOut:p.minOut};}
+function populateProfileSelects(){for(const id of ['profileSelect','settingsProfileSelect']){const el=$(id);el.innerHTML='';Object.entries(PROFILE_META).forEach(([k,v])=>{const o=document.createElement('option');o.value=k;o.textContent=v.name;el.appendChild(o);});} $('profileSelect').value=appSettings.activeProfile;$('settingsProfileSelect').value=appSettings.activeProfile;}
+function renderSettingsForm(){const key=$('settingsProfileSelect').value,p=appSettings.profiles[key];$('setLiqV').value=p.liqV;$('setGasV').value=p.gasV;$('setLiqDP').value=p.liqDP;$('setGasDP').value=p.gasDP;$('setMach').value=p.mach;$('setMinOut').value=p.minOut==null?'':p.minOut;$('profileDescription').textContent=PROFILE_META[key].desc;}
+function numInput(id,allowBlank=false){const s=$(id).value.trim();if(allowBlank&&s==='')return null;const v=parseFloat(s);if(!Number.isFinite(v)||v<0)throw new Error('설정값은 0 이상의 숫자로 입력하세요.');return v;}
+function saveSettings(){try{const key=$('settingsProfileSelect').value;appSettings.profiles[key]={liqV:numInput('setLiqV'),gasV:numInput('setGasV'),liqDP:numInput('setLiqDP'),gasDP:numInput('setGasDP'),mach:numInput('setMach'),minOut:numInput('setMinOut',true)};appSettings.activeProfile=key;persistSettings();populateProfileSelects();renderSettingsForm();alert(`${PROFILE_META[key].name} 기준을 저장하고 적용했습니다.`);if(lastResult)calculate();showView('calc');}catch(e){alert(e.message);}}
+function resetSettings(){const key=$('settingsProfileSelect').value;if(!confirm(`${PROFILE_META[key].name}을 기본 예시값으로 복원할까요?`))return;appSettings.profiles[key]=clone(DEFAULT_SETTINGS.profiles[key]);persistSettings();renderSettingsForm();}
+function showView(view){currentView=view;document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id===(view==='calc'?'calcView':'settingsView')));document.querySelectorAll('.nav-btn[data-view]').forEach(x=>x.classList.toggle('active',x.dataset.view===view));$('resultDock').classList.toggle('show',view==='calc'&&!!lastResult);if(view==='settings'){ $('settingsProfileSelect').value=appSettings.activeProfile;renderSettingsForm(); }window.scrollTo({top:0,behavior:'smooth'});}
+function currentEps(){return state.override.eps??MATERIALS.find(m=>m.key===state.mat).eps;}
+function flowUnits(){return state.calcMode!=='single'?['kg/h']:(state.phase==='gas'?GAS_FLOWUNITS:LIQ_FLOWUNITS);}
+
+
+function renderSpecialInputs(){
+  const isNaOH=state.calcMode==='single'&&state.fluid==='NAOH_AQ';$('concBlock').classList.toggle('show',isNaOH);
+  const wrap=$('concChips');wrap.innerHTML='';if(isNaOH){[10,20,30,40,50].forEach(v=>{const b=document.createElement('button');b.className='conc-chip'+(Math.abs((parseFloat($('conc').value)||0)-v)<1e-6?' on':'');b.textContent=v+'%';b.onclick=()=>{$('conc').value=v;state.override={};invalidateResult();renderSpecialInputs();renderEst();};wrap.appendChild(b);});}
+}
+
+function if97SaturationPropsP(P){
+  if(!Number.isFinite(P)||P<H2O_TP_PMIN||P>H2O_TP_PMAX)throw new Error(`2상 참고 계산 압력은 ${round(H2O_TP_PMIN/1e6,2)}~${round(H2O_TP_PMAX/1e6,1)} MPa(a) 범위만 지원합니다.`);
+  const pMPa=P/1e6,Tsat=IF97.saturationTemperature(pMPa),dt=0.001;
+  const a=IF97.solvePT(pMPa,Tsat-dt),b=IF97.solvePT(pMPa,Tsat+dt);
+  const liquid=a.density>b.density?a:b,vapor=a.density>b.density?b:a;
+  if(![liquid.density,vapor.density,liquid.enthalpy,vapor.enthalpy,liquid.viscosity,vapor.viscosity].every(Number.isFinite)||liquid.density<=vapor.density||vapor.enthalpy<=liquid.enthalpy)throw new Error('IF97 포화액·포화증기 물성을 안정적으로 구하지 못했습니다.');
+  return {P,pMPa,Tsat,hf:liquid.enthalpy,hg:vapor.enthalpy,rhof:liquid.density,rhog:vapor.density,muf:liquid.viscosity,mug:vapor.viscosity,sigma:IF97.surfaceTension(Tsat),liquid,vapor};
+}
+
+function twoPhaseStatePH(P,h){
+  const sat=if97SaturationPropsP(P),x=(h-sat.hf)/(sat.hg-sat.hf);
+  const v=(1-x)/sat.rhof+x/sat.rhog,rho=1/v;
+  const mu=1/((1-x)/sat.muf+x/sat.mug);
+  const alpha=(x/sat.rhog)/v;
+  return {...sat,h,x,v,rho,mu,alpha};
+}
+
+function renderSatPreview(){
+  if(state.calcMode!=='px'&&state.calcMode!=='ph')return;
+  try{
+    const P=(parseFloat($('pres').value)+1.01325)*1e5,s=if97SaturationPropsP(P);
+    const raw=state.calcMode==='px'?parseFloat($('quality').value)/100:NaN;
+    const x=state.calcMode==='px'?raw:(parseFloat($('enthalpy').value)-s.hf)/(s.hg-s.hf);
+    $('satPreview').textContent=`IF97 Tsat ${round(s.Tsat-T0,3)}℃ · hf ${round(s.hf,2)} · hg ${round(s.hg,2)} kJ/kg${Number.isFinite(x)?` · x ${round(x*100,2)} wt%`:''}`;
+  }catch(e){$('satPreview').textContent='⚠ '+e.message;}
+}
+
+function renderModeInputs(){
+  const gasLiquid=state.phase==='two-phase'||state.calcMode==='gl';
+  if(gasLiquid){state.phase='two-phase';state.calcMode='gl';}
+  const pureH2O=!gasLiquid&&(state.fluid==='WATER'||state.fluid==='STEAM');
+  if(!pureH2O&&!gasLiquid)state.calcMode='single';
+  $('h2oModeBlock').classList.toggle('show',pureH2O);
+  $('gasLiquidBlock').classList.toggle('show',gasLiquid);
+  $('fluidBlock').classList.toggle('hidden',gasLiquid);
+  $('calcModeSeg').querySelectorAll('button').forEach(b=>b.classList.toggle('act',b.dataset.mode===state.calcMode));
+  const h2oTwoPhase=state.calcMode==='px'||state.calcMode==='ph';
+  $('twoPhaseBlock').classList.toggle('show',h2oTwoPhase);
+  $('qualityBlock').classList.toggle('hidden',state.calcMode!=='px');
+  $('enthalpyBlock').classList.toggle('hidden',state.calcMode!=='ph');
+  $('tempBlock').classList.toggle('hidden',h2oTwoPhase||gasLiquid);
+  $('phaseSeg').classList.toggle('locked',h2oTwoPhase);
+  $('modeNote').textContent=h2oTwoPhase?'순수 H₂O 평형·단열·등엔탈피 가정의 HEM 참고값입니다. 유동양식·Slip·열손실은 계산하지 않습니다.':'단상은 IF97 기반 정상상태 등온 적분입니다.';
+  if(h2oTwoPhase||gasLiquid){state.flowUnit='kg/h';$('flowUnitLbl').textContent='kg/h';}
+  $('estBadge').textContent=h2oTwoPhase?'IF97 자동':gasLiquid?'양상 직접입력':'탭하여 수정';
+  renderSatPreview();
+}
+
+function renderPresetChips(){
+  const wrap=$('presChips'),note=$('presNote'),preset=state.calcMode==='gl'?null:PRES_PRESETS[state.fluid];
+  wrap.innerHTML='';note.textContent='';
+  if(state.calcMode==='gl'){note.textContent='Gas-Liquid는 양상 물성을 정의한 실제 입구 압력을 입력';return;}
+  if(!preset){note.textContent='이 유체는 통용 프리셋이 없습니다 — 실제 운전압 입력';return;}
+  const cur=parseFloat($('pres').value);
+  preset.items.forEach(([lbl,val])=>{const c=document.createElement('button');c.className='preset-chip'+(Math.abs(cur-val)<1e-6?' on':'');c.innerHTML=`${lbl}<span class="pv">${val} barg</span>`;c.onclick=()=>{$('pres').value=val;invalidateResult();renderPresetChips();renderEst();renderSatPreview();};wrap.appendChild(c);});
+  note.textContent='⚠ '+preset.note;
+}
+function editEst(d,key){
+  const old=d.querySelector('.v')?.textContent||'';
+  const clean=/직접입력/.test(old)?'':old;
+  d.classList.add('edit');d.innerHTML=`<div class="k">${key} 직접입력</div><input value="${clean}" inputmode="decimal" placeholder="숫자 입력"/>`;
+  const inp=d.querySelector('input');inp.focus();inp.select();
+  const done=()=>{
+    const val=parseFloat(inp.value);
+    if(Number.isFinite(val)&&val>0){
+      if(state.phase==='gas'&&key==='rho')delete state.override.Z;
+      if(state.phase==='gas'&&key==='Z')delete state.override.rho;
+      state.override[key]=val;
+      invalidateResult();
+    }
+    renderEst();
+  };
+  inp.onblur=done;inp.onkeydown=e=>{if(e.key==='Enter')inp.blur();};
+}
+function renderTwoPhaseEst(){
+  const grid=$('estGrid');grid.innerHTML='';
+  try{
+    const P=(parseFloat($('pres').value)+1.01325)*1e5,s=if97SaturationPropsP(P);
+    const x=state.calcMode==='px'?parseFloat($('quality').value)/100:(parseFloat($('enthalpy').value)-s.hf)/(s.hg-s.hf);
+    const h=Number.isFinite(x)?s.hf+x*(s.hg-s.hf):NaN,m=Number.isFinite(h)?twoPhaseStatePH(P,h):null;
+    const items=[['IF97 Tsat ℃',round(s.Tsat-T0,3)],['hf / hg kJ/kg',`${round(s.hf,2)} / ${round(s.hg,2)}`],['ρf / ρg kg/m³',`${round(s.rhof,3)} / ${round(s.rhog,4)}`],['μf / μg Pa·s',`${s.muf.toExponential(3)} / ${s.mug.toExponential(3)}`],['표면장력 N/m',Number.isFinite(s.sigma)?s.sigma.toExponential(4):'미산정'],['계산 x / α',m?`${round(m.x*100,2)}% / ${round(m.alpha*100,2)}%`:'입력 확인']];
+    items.forEach(([k,v])=>{const d=document.createElement('div');d.className='estitem';d.innerHTML=`<div class="k">${k}</div><div class="v">${v}</div>`;grid.appendChild(d);});
+    const note=document.createElement('div');note.className='estnote'+(!Number.isFinite(x)||x<H2O_TP_XMIN||x>H2O_TP_XMAX?' warn':'');note.textContent='IF97 포화물성 자동계산 · HEM 혼합밀도 · McAdams형 조화평균 점도 · 물성 직접입력은 2상 모드에서 사용하지 않음';grid.appendChild(note);
+  }catch(e){grid.innerHTML=`<div class="estnote danger">⚠ ${esc(e.message)}</div>`;}
+}
+
+function readGasLiquidInputs(){
+  return {
+    x:parseFloat($('glQuality').value)/100,
+    rhoL:parseFloat($('glRhoL').value),
+    muL:parseFloat($('glMuL').value)*1e-3,
+    rhoG0:parseFloat($('glRhoG').value),
+    muG:parseFloat($('glMuG').value)*1e-3
+  };
+}
+
+function gasLiquidMixtureState(P,P1,props){
+  const {x,rhoL,muL,rhoG0,muG}=props;
+  if(![P,P1,x,rhoL,muL,rhoG0,muG].every(Number.isFinite)||P<=0||P1<=0||rhoL<=0||rhoG0<=0||muL<=0||muG<=0)throw new Error('Gas-Liquid 입력 물성은 모두 0보다 큰 숫자여야 합니다.');
+  if(x<GL_XMIN||x>GL_XMAX)throw new Error(`기상 질량분율은 ${GL_XMIN*100}~${GL_XMAX*100} wt% 범위만 지원합니다.`);
+  if(rhoL/rhoG0<GL_RHO_RATIO_MIN)throw new Error(`입력 밀도비 ρL/ρG=${round(rhoL/rhoG0,3)}입니다. 서로 구분되는 기액상으로 보기 위한 Product Guard ${GL_RHO_RATIO_MIN} 이상이 필요합니다.`);
+  const rhoG=rhoG0*(P/P1),v=(1-x)/rhoL+x/rhoG,rho=1/v,mu=1/((1-x)/muL+x/muG),alpha=(x/rhoG)/v;
+  const dvdP=-x/(rhoG*P);
+  return {P,P1,x,rhoL,muL,rhoG0,rhoG,muG,v,rho,mu,alpha,dvdP,rhof:rhoL,muf:muL,rhog:rhoG,mug:muG};
+}
+
+function renderGasLiquidEst(){
+  const grid=$('estGrid');grid.innerHTML='';
+  try{
+    const P1=(parseFloat($('pres').value)+1.01325)*1e5,props=readGasLiquidInputs(),s=gasLiquidMixtureState(P1,P1,props);
+    const items=[['기상 질량분율 xg',round(s.x*100,4)+'%'],['No-slip Void α',round(s.alpha*100,3)+'%'],['혼합밀도 ρm',round(s.rho,4)+' kg/m³'],['혼합점도 μm',s.mu.toExponential(4)+' Pa·s'],['밀도비 ρL/ρG',round(s.rhoL/s.rhoG,2)],['압축성 근사','ρG ∝ P']];
+    items.forEach(([k,v])=>{const d=document.createElement('div');d.className='estitem';d.innerHTML=`<div class="k">${k}</div><div class="v">${v}</div>`;grid.appendChild(d);});
+    const note=document.createElement('div');note.className='estnote warn';note.textContent='입력 물성은 자동 검증값이 아닙니다 · Lockhart–Martinelli/Chisholm 주 계산 · HEM 민감도 비교 · VLE/Flash/Slugging 미지원';grid.appendChild(note);
+  }catch(e){grid.innerHTML=`<div class="estnote danger">⚠ ${esc(e.message)}</div>`;}
+}
+
+function renderEst(){
+  if(state.calcMode==='gl'){renderGasLiquidEst();return;}
+  if(state.calcMode!=='single'){renderTwoPhaseEst();return;}
+  const Tc=parseFloat($('temp').value)||0,Pb=parseFloat($('pres').value)||0,f=FLUID_DB[state.fluid];
+  const est=estimateProperties(state.fluid,Tc,Pb),grid=$('estGrid');grid.innerHTML='';
+  const items=[];let gasResolved=null;
+  if(f.custom){
+    items.push(['ρ 밀도 kg/m³',state.override.rho??'직접입력','rho']);
+    items.push(['μ 점도 Pa·s',state.override.mu!=null?state.override.mu.toExponential(3):'직접입력','mu']);
+    items.push(['ε 조도 mm',currentEps(),'eps']);
+  }else if(est.ok&&f.h2o){
+    const hs=est.h2oState||{};
+    items.push(['MW',est.MW,'MW']);
+    items.push(['IF97 Region',hs.region??'판정 중단','region']);
+    items.push(['ρ 밀도 kg/m³',Number.isFinite(state.override.rho??est.rho)?round(state.override.rho??est.rho,3):'미산정','rho']);
+    items.push(['μ 점도 Pa·s',Number.isFinite(state.override.mu??est.mu)?(state.override.mu??est.mu).toExponential(3):'미산정','mu']);
+    if(Number.isFinite(hs.a))items.push(['음속 a m/s',round(hs.a,2),'a']);
+    if(Number.isFinite(hs.h))items.push(['엔탈피 h kJ/kg',round(hs.h,2),'h']);
+    items.push(['ε 조도 mm',currentEps(),'eps']);
+  }else if(est.ok){
+    items.push(['MW',est.MW,'MW']);
+    if(est.phase==='gas'){
+      gasResolved=resolveGasState(est.T,est.P,f,est.Z);
+      items.push(['Z 압축계수',round(gasResolved.Z,4),'Z']);items.push(['k=Cp/Cv',est.k,'k']);
+    }
+    items.push(['ρ 밀도 kg/m³',round(gasResolved?.rho??state.override.rho??est.rho,3),'rho']);
+    items.push(['μ 점도 Pa·s',(state.override.mu??est.mu).toExponential(3),'mu']);
+    items.push(['ε 조도 mm',currentEps(),'eps']);
+  }else{
+    grid.innerHTML=`<div class="estnote danger">⚠ ${est.error||'물성 계산 실패'}</div>`;return;
+  }
+  items.forEach(([k,v,key])=>{const d=document.createElement('div');d.className='estitem';d.dataset.key=key;d.innerHTML=`<div class="k">${k}</div><div class="v">${v}</div>`;if(['rho','mu','eps'].includes(key)||(key==='Z'&&!f.h2o))d.onclick=()=>editEst(d,key);grid.appendChild(d);});
+  const note=document.createElement('div');note.className='estnote';
+  if(f.custom){note.className+=' warn';note.textContent='⚠ 자동 물성 미지원: 실제 운전조건의 ρ와 μ를 직접 입력해야 합니다.';}
+  else if(f.h2o){
+    const hs=est.h2oState||{},overrideText=(state.override.rho||state.override.mu)?' · ρ/μ 직접입력은 입구 IF97값 대비 보정비율로 전 구간 적용':'';
+    note.textContent=`${hs.title||'IF97 상태 판정'} · ${hs.msg||''}${hs.satMarginK!=null?` · 포화온도 여유 ${round(Math.abs(hs.satMarginK),3)}℃`:''}${overrideText}${f.coolingWater?' · 일반 Cooling Water는 순수 물 근사 안내만 표시; Glycol·고염수는 실제 물성 입력 필요':''}`;
+    if(hs.level==='danger')note.className+=' danger';else if(hs.level==='warn')note.className+=' warn';
+  }else if(est.phase==='gas'){
+    const z=est.zc,overrideText=gasResolved?.source==='rho'?` · ${gasResolved.label} (Z_eff=${round(gasResolved.Z,4)})`:gasResolved?.source==='Z'?' · Z 직접입력에 맞춰 ρ 재계산':'';
+    const guardText=gasResolved?.zCheck?.messages?.length?` · ⚠ ${gasResolved.zCheck.messages.join(' ')}`:'';
+    note.textContent=`Z 모델: ${z.by} · Pitzer ${round(z.pitzer.Z,3)} / DAK ${round(z.sk.Z,3)} / PR ${round(z.pr.Z,3)} · 모델편차 ${round(z.spread,1)}% · μ: ${est.muMethod}${overrideText}${guardText} · ${f.note}`;
+    if(gasResolved?.zCheck?.level==='danger')note.className+=' danger';
+    else if(z.nearCritical||z.spread>15||gasResolved?.source==='rho'||gasResolved?.zCheck?.level==='warn')note.className+=' warn';
+  }else{
+    note.textContent=`액체 물성: ${liquidModelName(f)} · ${f.note}`+(est.conc!=null?` · ${round(est.conc,1)} wt%`:'');
+    if(f.conf==='low'||est.propertyClamped)note.className+=' warn';
+  }
+  grid.appendChild(note);
+}
+
+// ── 7. 계산 ──
+function integrateH2OPipe({key,T,Tc,P1,flow,unit,D,A,relEps,Leff,dz,pipeSpec,segmentTarget=40}){
+  const fluid=FLUID_DB[key],expectedPhase=fluid.phase,autoIn=if97StatePT(P1,T,expectedPhase);
+  const base={phase:expectedPhase,isH2O:true,T,Tc,P1,D,pipeSpec,Leff,dz,relEps,model:'IAPWS-IF97 · IAPWS 2008 μ · 등온 압축성 Darcy 구간 적분',zSpread:0,zc:null,zCheck:null};
+  const blank=(check,reason)=>({...base,V:NaN,Vin:NaN,Re:NaN,f:NaN,dP:NaN,dPFric:NaN,dPStatic:NaN,dP100:NaN,outP:NaN,rho:autoIn.rho??NaN,rhoOut:autoIn.rho??NaN,mu:autoIn.mu??NaN,Z:autoIn.Z??NaN,Zin:autoIn.Z??NaN,Ma:NaN,a:autoIn.a??NaN,criticalMetric:NaN,calcStopped:true,choked:false,stopReason:reason,reachedLength:0,P2:P1,phaseCheck:{level:'danger',title:check.title||'IF97 계산 중단',msg:reason,Psat:check.Psat,Tsat:check.Tsat,satMarginK:check.satMarginK,region:check.region},h2oIn:autoIn,h2oOut:autoIn,regions:autoIn.region?String(autoIn.region):'미산정',segmentsDone:0});
+  if(!autoIn.ok||autoIn.level==='danger')return blank(autoIn,autoIn.msg||'입구 상태에서 단상 배관 계산을 시작할 수 없습니다.');
+  const rhoScale=Number.isFinite(state.override.rho)&&state.override.rho>0?state.override.rho/autoIn.rho:1;
+  const muScale=Number.isFinite(state.override.mu)&&state.override.mu>0?state.override.mu/autoIn.mu:1;
+  const localState=P=>{const s=if97StatePT(P,T,expectedPhase);if(s.ok){s.rhoFlow=s.rho*rhoScale;s.muFlow=s.mu*muScale;}return s;};
+  let inlet=localState(P1);
+  let mdot;
+  if(unit==='kg/h')mdot=flow/3600;
+  else if(expectedPhase==='gas'&&unit==='Nm³/h')mdot=flow*(101325*(fluid.MW/1000)/(R_UNIV*T0))/3600;
+  else mdot=flow*inlet.rhoFlow/3600;
+  const G=mdot/A,G2=G*G,targetDx=Leff/Math.max(40,segmentTarget),minDx=Math.max(Leff/262144,1e-7),dzdx=Leff>0?dz/Leff:0;
+  let P=P1,x=0,step=targetDx,current=inlet,last=inlet,segmentsDone=0,guard=0;
+  let dPFricPa=0,dPStaticPa=0,maxV=G/current.rhoFlow,maxMa=maxV/current.a,maxCrit=0,lastRe=G*D/current.muFlow,lastF=colebrook(lastRe,relEps);
+  let stopped=false,stopReason='',stopCheck=null,stopKind='',regions=new Set([current.region]);
+  while(x<Leff-1e-9&&guard++<20000){
+    step=Math.min(step,Leff-x);
+    const rho=current.rhoFlow,mu=current.muFlow,Re=G*D/mu,ff=colebrook(Re,relEps);
+    const crit=G2*current.kappaT/rho,denom=1-crit;
+    if(!Number.isFinite(denom)||denom<=0.05){stopped=true;stopKind='critical';stopReason=`등온 가속항 G²κT/ρ=${round(crit,4)}가 1에 접근해 정상해를 계속 계산할 수 없습니다.`;stopCheck={level:'danger',title:'등온 모델 임계조건 도달',msg:stopReason,region:current.region,Psat:current.Psat,Tsat:current.Tsat,satMarginK:current.satMarginK};break;}
+    const fricGrad=ff*G2/(2*rho*D),staticGrad=rho*9.80665*dzdx,totalGrad=(fricGrad+staticGrad)/denom;
+    const dP=totalGrad*step,Pn=P-dP;
+    if(!Number.isFinite(Pn)||Pn<=0){stopped=true;stopKind='pressure';stopReason='계산 압력이 0 이하가 되어 단상 적분을 중단했습니다.';stopCheck={level:'danger',title:'압력해 소실',msg:stopReason,region:current.region};break;}
+    const next=localState(Pn);
+    if(!next.ok||next.level==='danger'){
+      if(step>minDx){step/=2;continue;}
+      stopped=true;stopKind='phase';stopReason=next.msg||'포화선 또는 IF97 적용 경계에 도달했습니다.';stopCheck={level:'danger',title:next.title||'IF97 계산 중단',msg:`${stopReason} 전체 길이 결과는 표시하지 않습니다.`,region:next.region,Psat:next.Psat,Tsat:next.Tsat,satMarginK:next.satMarginK};break;
+    }
+    const relP=Math.abs(Pn-P)/Math.max(P,1),relRho=Math.abs(next.rhoFlow-rho)/Math.max(rho,1e-12);
+    if((relP>0.005||relRho>0.01)&&step>minDx){step/=2;continue;}
+    dPFricPa+=fricGrad/denom*step;dPStaticPa+=staticGrad/denom*step;
+    P=Pn;x+=step;segmentsDone++;last=next;current=next;regions.add(next.region);
+    const V=G/next.rhoFlow,Ma=V/next.a;maxV=Math.max(maxV,V);maxMa=Math.max(maxMa,Ma);maxCrit=Math.max(maxCrit,crit);lastRe=Re;lastF=ff;
+    if(step<targetDx/2&&relP<0.0025&&relRho<0.005)step=Math.min(targetDx,step*2);
+  }
+  if(guard>=20000&&!stopped){stopped=true;stopKind='iteration';stopReason='자동 구간 세분화 반복 한도에 도달했습니다.';stopCheck={level:'danger',title:'수치적분 반복 한도',msg:stopReason,region:last.region};}
+  const full=!stopped&&x>=Leff-1e-7,P2=P,outP=full?P2/1e5-1.01325:NaN,dPFric=dPFricPa/1e5,dPStatic=dPStaticPa/1e5;
+  const phaseCheck=full?phaseScreen(key,T,P1,P2,expectedPhase):(stopCheck||{level:'danger',title:'IF97 단상 계산 중단',msg:stopReason,region:last.region});
+  return {...base,V:maxV,Vin:G/inlet.rhoFlow,Re:lastRe,f:lastF,dP:full?(P1-P2)/1e5:NaN,dPFric,dPStatic,dP100:full?dPFric/(Leff/100):NaN,outP,rho:inlet.rhoFlow,rhoOut:last.rhoFlow,mu:last.muFlow,Z:last.Z,Zin:inlet.Z,Ma:maxMa,a:last.a,criticalMetric:maxCrit,calcStopped:!full,choked:stopKind==='critical',stopReason,reachedLength:x,P2,phaseCheck,h2oIn:inlet,h2oOut:last,regions:[...regions].join('→'),segmentsDone,rhoScale,muScale};
+}
+
+function lockhartMartinelliGradient(G,x,D,relEps,s){
+  const Gl=(1-x)*G,Gg=x*G,ReL=Gl*D/s.muf,ReG=Gg*D/s.mug;
+  const fL=colebrook(ReL,relEps),fG=colebrook(ReG,relEps);
+  const gradL=fL*Gl*Gl/(2*s.rhof*D),gradG=fG*Gg*Gg/(2*s.rhog*D);
+  if(![gradL,gradG].every(v=>Number.isFinite(v)&&v>0))throw new Error('Lockhart–Martinelli 상별 마찰구배를 계산할 수 없습니다.');
+  const X=Math.sqrt(gradL/gradG),lTurb=ReL>=2000,gTurb=ReG>=2000;
+  const C=lTurb?(gTurb?20:10):(gTurb?12:5),phiL2=1+C/X+1/(X*X);
+  return {gradient:phiL2*gradL,X,C,phiL2,ReL,ReG,fL,fG,gradL,gradG};
+}
+
+function twoPhaseDvdP(P,h){
+  const span=Math.max(100,P*1e-4),lo=Math.max(H2O_TP_PMIN,P-span),hi=Math.min(H2O_TP_PMAX,P+span);
+  if(hi<=lo)throw new Error('2상 가속항의 압력 미분 구간을 만들 수 없습니다.');
+  return (twoPhaseStatePH(hi,h).v-twoPhaseStatePH(lo,h).v)/(hi-lo);
+}
+
+function integrateTwoPhasePipe({P1,h,flow,D,A,relEps,Leff,dz,pipeSpec,segmentTarget=80}){
+  const model='IAPWS-IF97 포화물성 · 등엔탈피 HEM · Lockhart–Martinelli/Chisholm 마찰 민감도';
+  let inlet;
+  try{inlet=twoPhaseStatePH(P1,h);}catch(e){return {twoPhase:true,phase:'two-phase',calcStopped:true,stopReason:e.message,phaseCheck:{level:'danger',title:'2상 적용범위 밖',msg:e.message},P1,P2:P1,h,D,A,relEps,Leff,dz,pipeSpec,model,reachedLength:0,segmentsDone:0,V:NaN,Re:NaN,dP:NaN,outP:NaN,modelDiff:NaN};}
+  const base={twoPhase:true,phase:'two-phase',isH2O:true,P1,h,D,A,relEps,Leff,dz,pipeSpec,model,inlet};
+  const stopped=(reason,title='2상 참고 계산 중단',reachedLength=0,last=inlet,extra={})=>({...base,calcStopped:true,stopReason:reason,phaseCheck:{level:'danger',title,msg:`${reason} 전체 길이 결과는 채택하지 않습니다.`},P2:last.P??P1,reachedLength,segmentsDone:extra.segmentsDone??0,V:extra.maxV??(Number.isFinite(last.rho)?flow/3600/A/last.rho:NaN),Re:extra.lastRe??NaN,dP:NaN,dPFric:NaN,dPStatic:NaN,dPAccel:NaN,dP100:NaN,outP:NaN,rho:inlet.rho,rhoOut:last.rho,mu:last.mu,xIn:inlet.x,xOut:last.x,alphaIn:inlet.alpha,alphaOut:last.alpha,sigmaIn:inlet.sigma,sigmaOut:last.sigma,modelDiff:extra.modelDiff??NaN,criticalMetric:extra.maxCrit??NaN,...extra});
+  if(!Number.isFinite(inlet.x)||inlet.x<H2O_TP_XMIN||inlet.x>H2O_TP_XMAX)return stopped(`입구 증기품질 x=${Number.isFinite(inlet.x)?round(inlet.x,5):'미산정'}입니다. 2상 모드는 x=${H2O_TP_XMIN}~${H2O_TP_XMAX}만 지원합니다.`,'입구가 2상 Guard 밖');
+  if(!Number.isFinite(flow)||flow<=0)return stopped('2상 모드의 질량유량은 0보다 큰 kg/h로 입력해야 합니다.','유량 입력 오류');
+  const mdot=flow/3600,G=mdot/A,G2=G*G,targetDx=Leff/Math.max(80,segmentTarget),minDx=Math.max(Leff/262144,1e-7),dzdx=Leff>0?dz/Leff:0;
+  let P=P1,pos=0,step=targetDx,current=inlet,last=inlet,segmentsDone=0,guard=0;
+  let hemFricPa=0,lmFricPa=0,staticPa=0,accelPa=0,maxV=G/inlet.rho,maxCrit=0,lastRe=G*D/inlet.mu,lastF=colebrook(lastRe,relEps),lastLM=null;
+  while(pos<Leff-1e-9&&guard++<30000){
+    step=Math.min(step,Leff-pos);
+    const Re=G*D/current.mu,ff=colebrook(Re,relEps),fricGrad=ff*G2/(2*current.rho*D),staticGrad=current.rho*9.80665*dzdx;
+    let dvdP;try{dvdP=twoPhaseDvdP(P,h);}catch(e){return stopped(e.message,'가속항 물성 미분 실패',pos,current,{segmentsDone,maxV,lastRe,maxCrit});}
+    const crit=-G2*dvdP,denom=1+G2*dvdP;
+    if(!Number.isFinite(denom)||denom<=0.05)return stopped(`HEM 가속항 -G²(∂v/∂P)h=${round(crit,4)}가 1에 접근했습니다.`,'HEM 임계조건 도달',pos,current,{segmentsDone,maxV,lastRe,maxCrit:Math.max(maxCrit,crit)});
+    let lm;try{lm=lockhartMartinelliGradient(G,current.x,D,relEps,current);}catch(e){return stopped(e.message,'Lockhart–Martinelli 계산 실패',pos,current,{segmentsDone,maxV,lastRe,maxCrit});}
+    const totalGrad=(fricGrad+staticGrad)/denom,Pn=P-totalGrad*step;
+    if(!Number.isFinite(Pn)||Pn<H2O_TP_PMIN||Pn>H2O_TP_PMAX){if(step>minDx){step/=2;continue;}return stopped('배관 중 압력이 2상 참고 계산 범위 0.1~10 MPa(a)를 벗어났습니다.','압력 적용범위 이탈',pos,current,{segmentsDone,maxV,lastRe,maxCrit});}
+    let next;try{next=twoPhaseStatePH(Pn,h);}catch(e){if(step>minDx){step/=2;continue;}return stopped(e.message,'IF97 Flash 실패',pos,current,{segmentsDone,maxV,lastRe,maxCrit});}
+    if(next.x<H2O_TP_XMIN||next.x>H2O_TP_XMAX){if(step>minDx){step/=2;continue;}return stopped(`배관 중 증기품질 x=${round(next.x,5)}로 2상 Guard를 벗어났습니다.`,'단상 경계 도달',pos,current,{segmentsDone,maxV,lastRe,maxCrit});}
+    const relP=Math.abs(Pn-P)/Math.max(P,1),dxQuality=Math.abs(next.x-current.x);
+    if((relP>0.005||dxQuality>0.01)&&step>minDx){step/=2;continue;}
+    hemFricPa+=fricGrad*step;lmFricPa+=lm.gradient*step;staticPa+=staticGrad*step;accelPa+=(totalGrad-fricGrad-staticGrad)*step;
+    P=Pn;pos+=step;segmentsDone++;last=next;last.P=P;current=next;lastLM=lm;maxV=Math.max(maxV,G/next.rho);maxCrit=Math.max(maxCrit,crit);lastRe=Re;lastF=ff;
+    if(step<targetDx/2&&relP<0.0025&&dxQuality<0.005)step=Math.min(targetDx,step*2);
+  }
+  if(guard>=30000)return stopped('자동 구간 세분화 반복 한도에 도달했습니다.','수치적분 반복 한도',pos,last,{segmentsDone,maxV,lastRe,maxCrit});
+  const modelDiff=Math.abs(lmFricPa-hemFricPa)/Math.max(Math.abs(hemFricPa),1e-12)*100;
+  const disagreement=modelDiff>H2O_TP_MODEL_DIFF_HOLD,P2=P,dP=(P1-P2)/1e5,outP=P2/1e5-1.01325;
+  return {...base,calcStopped:false,modelDisagreementHold:disagreement,stopReason:disagreement?`HEM과 Lockhart–Martinelli/Chisholm 마찰손실 차이가 ${round(modelDiff,1)}%로 ${H2O_TP_MODEL_DIFF_HOLD}% 기준을 초과했습니다.`:'',phaseCheck:{level:disagreement?'danger':'warn',title:disagreement?'2상 모델 편차 HOLD':'2상 참고 계산 완료',msg:disagreement?'두 상관식의 민감도 차이가 커 전체 결과를 채택하지 않습니다.':'결과는 참고값이며 유동양식·Slip·열손실을 다루는 전용도구로 상세검증해야 합니다.'},P2,dP,dPFric:hemFricPa/1e5,dPFricLM:lmFricPa/1e5,dPStatic:staticPa/1e5,dPAccel:accelPa/1e5,dP100:(hemFricPa/1e5)/(Leff/100),outP,rho:inlet.rho,rhoOut:last.rho,mu:last.mu,V:maxV,Re:lastRe,f:lastF,G,xIn:inlet.x,xOut:last.x,alphaIn:inlet.alpha,alphaOut:last.alpha,sigmaIn:inlet.sigma,sigmaOut:last.sigma,TsatIn:inlet.Tsat,TsatOut:last.Tsat,hfIn:inlet.hf,hgIn:inlet.hg,modelDiff,criticalMetric:maxCrit,reachedLength:pos,segmentsDone,lastLM};
+}
+
+function integrateGasLiquidPipe({P1,flow,D,A,relEps,Leff,straightL,dz,pipeSpec,props,segmentTarget=80}){
+  const model='등온·고정 Z 기상밀도 · Lockhart–Martinelli/Chisholm 주 계산 · HEM 민감도';
+  const base={twoPhase:true,gasLiquid:true,phase:'two-phase',P1,flow,D,A,relEps,Leff,straightL,dz,pipeSpec,props,model};
+  const stopped=(reason,title='Gas-Liquid 계산 중단',reachedLength=0,last=null,extra={})=>({...base,calcStopped:true,stopReason:reason,phaseCheck:{level:'danger',title,msg:`${reason} 전체 길이 결과는 채택하지 않습니다.`},P2:last?.P??P1,reachedLength,segmentsDone:extra.segmentsDone??0,dP:NaN,dPFricLM:NaN,dPFricHEM:NaN,dPStatic:NaN,dPAccel:NaN,dP100:NaN,outP:NaN,modelDiff:extra.modelDiff??NaN,pressureDropRatio:extra.pressureDropRatio??NaN,V:extra.maxV??NaN,Re:extra.lastRe??NaN,G:extra.G??NaN,xIn:props?.x,alphaIn:last?.alpha??NaN,rho:last?.rho??NaN,rhoGIn:props?.rhoG0,criticalMetric:extra.maxCrit??NaN,lastLM:extra.lastLM??null,...extra});
+  if(!Number.isFinite(P1)||P1<=GL_PABS_MIN)return stopped(`입구 절대압력은 ${round(GL_PABS_MIN/1e5,2)} bara보다 커야 합니다.`,'입구압력 적용범위 밖');
+  if(!Number.isFinite(flow)||flow<=0||!Number.isFinite(Leff)||Leff<=0||!Number.isFinite(straightL)||straightL<=0)return stopped('질량유량과 배관 길이는 0보다 커야 합니다.','입력값 오류');
+  let inlet;
+  try{inlet=gasLiquidMixtureState(P1,P1,props);}catch(e){return stopped(e.message,'Gas-Liquid 물성 Guard');}
+  const slope=Math.abs(dz)/straightL;
+  if(!Number.isFinite(slope)||slope>GL_SLOPE_MAX)return stopped(`|Δz|/L=${Number.isFinite(slope)?round(slope,5):'미산정'}입니다. v7.2 수평 근사 Guard ${GL_SLOPE_MAX} 이하만 지원합니다.`,'배관 경사 적용범위 밖',0,inlet);
+  const mdot=flow/3600,G=mdot/A,G2=G*G,targetDx=Leff/Math.max(80,segmentTarget),minDx=Math.max(Leff/262144,1e-7),dzdx=dz/Leff;
+  let P=P1,pos=0,step=targetDx,current=inlet,last=inlet,segmentsDone=0,guard=0;
+  let lmFricPa=0,hemFricPa=0,staticPa=0,accelPa=0,maxV=G/inlet.rho,maxCrit=0,lastRe=G*D/inlet.mu,lastF=colebrook(lastRe,relEps),lastLM=null;
+  while(pos<Leff-1e-9&&guard++<30000){
+    step=Math.min(step,Leff-pos);
+    const Re=G*D/current.mu,ff=colebrook(Re,relEps),hemGrad=ff*G2/(2*current.rho*D),staticGrad=current.rho*9.80665*dzdx;
+    let lm;try{lm=lockhartMartinelliGradient(G,current.x,D,relEps,current);}catch(e){return stopped(e.message,'Lockhart–Martinelli 계산 실패',pos,current,{segmentsDone,maxV,lastRe,maxCrit,G,lastLM});}
+    const crit=-G2*current.dvdP,denom=1+G2*current.dvdP;
+    if(!Number.isFinite(denom)||denom<=0.10)return stopped(`혼합 가속항 -G²(∂v/∂P)=${round(crit,4)}가 1에 접근했습니다.`,'압축성 임계 Guard',pos,current,{segmentsDone,maxV,lastRe,maxCrit:Math.max(maxCrit,crit),G,lastLM:lm});
+    const totalGrad=(lm.gradient+staticGrad)/denom,Pn=P-totalGrad*step;
+    if(!Number.isFinite(Pn)||Pn<=GL_PABS_MIN){if(step>minDx){step/=2;continue;}return stopped('계산 중 절대압력이 최소 Guard 아래로 내려갔습니다.','출구압력 적용범위 이탈',pos,current,{segmentsDone,maxV,lastRe,maxCrit,G,lastLM:lm});}
+    let next;try{next=gasLiquidMixtureState(Pn,P1,props);}catch(e){if(step>minDx){step/=2;continue;}return stopped(e.message,'Gas-Liquid 물성 계산 실패',pos,current,{segmentsDone,maxV,lastRe,maxCrit,G,lastLM:lm});}
+    const relP=Math.abs(Pn-P)/Math.max(P,1);
+    if(relP>0.005&&step>minDx){step/=2;continue;}
+    lmFricPa+=lm.gradient*step;hemFricPa+=hemGrad*step;staticPa+=staticGrad*step;accelPa+=(totalGrad-lm.gradient-staticGrad)*step;
+    P=Pn;pos+=step;segmentsDone++;last=next;current=next;lastLM=lm;maxV=Math.max(maxV,G/next.rho);maxCrit=Math.max(maxCrit,crit);lastRe=Re;lastF=ff;
+    if(step<targetDx/2&&relP<0.0025)step=Math.min(targetDx,step*2);
+  }
+  if(guard>=30000)return stopped('자동 구간 세분화 반복 한도에 도달했습니다.','수치적분 반복 한도',pos,last,{segmentsDone,maxV,lastRe,maxCrit,G,lastLM});
+  const modelDiff=Math.abs(lmFricPa-hemFricPa)/Math.max(Math.abs(lmFricPa),1e-12)*100,pressureDropRatio=(P1-P)/P1;
+  const modelDisagreementHold=modelDiff>GL_MODEL_DIFF_HOLD,pressureRatioHold=pressureDropRatio>GL_DP_RATIO_MAX;
+  const hold=modelDisagreementHold||pressureRatioHold,P2=P,dP=(P1-P2)/1e5,outP=P2/1e5-1.01325;
+  let title='Gas-Liquid 참고 계산 완료',msg='REFERENCE 결과도 실제 유동양식·Hold-up·Slip을 다루는 전용도구 또는 실측으로 검증해야 합니다.';
+  if(modelDisagreementHold){title='Gas-Liquid 모델 편차 HOLD';msg=`Lockhart–Martinelli/Chisholm과 HEM 마찰손실 차이가 ${round(modelDiff,1)}%로 ${GL_MODEL_DIFF_HOLD}% 기준을 초과했습니다.`;}
+  else if(pressureRatioHold){title='기상 밀도 근사범위 HOLD';msg=`총 압력변화가 입구 절대압력의 ${round(pressureDropRatio*100,2)}%로 고정 Z Product Guard ${GL_DP_RATIO_MAX*100}%를 초과했습니다.`;}
+  const jL=(1-props.x)*G/props.rhoL,jG=props.x*G/last.rhoG;
+  return {...base,calcStopped:false,modelDisagreementHold,pressureRatioHold,stopReason:hold?msg:'',phaseCheck:{level:hold?'danger':'warn',title,msg},P2,dP,dPFricLM:lmFricPa/1e5,dPFricHEM:hemFricPa/1e5,dPStatic:staticPa/1e5,dPAccel:accelPa/1e5,dP100:(lmFricPa/1e5)/(Leff/100),outP,rho:inlet.rho,rhoOut:last.rho,rhoGIn:inlet.rhoG,rhoGOut:last.rhoG,mu:inlet.mu,V:maxV,Re:lastRe,f:lastF,G,xIn:props.x,xOut:props.x,alphaIn:inlet.alpha,alphaOut:last.alpha,jL,jG,modelDiff,pressureDropRatio,criticalMetric:maxCrit,reachedLength:pos,segmentsDone,lastLM};
+}
+
+function renderTwoPhaseResult(r){
+  const hold=!!r.calcStopped||!!r.modelDisagreementHold,status=hold?'HOLD':'REFERENCE',cls=hold?'hold':'reference',icon=hold?'!':'≈';
+  const fmt=(x,n=4,s='')=>Number.isFinite(x)?round(x,n)+s:'미산정';
+  let html=`<div class="verdict ${cls}"><div class="vi">${icon}</div><div class="vt"><b>${status}</b><div>${hold?esc(r.phaseCheck.title)+' — 전체 결과 미채택':'2상 참고 계산 · 상세검증 필요'}</div></div></div>`;
+  html+=`<div class="alertbox ${hold?'danger':'warn'}"><b>${esc(r.phaseCheck.title)}</b><br>${esc(r.phaseCheck.msg)}</div>`;
+  html+=`<div class="quality"><div class="qh"><b>2상 모델 신뢰도</b><span class="qbadge d">D · 참고용</span></div><div class="qline">• 순수 H₂O 열역학적 평형<br>• 등엔탈피 Homogeneous Equilibrium Model(HEM)<br>• Slip·유동양식·열손실·비평형 Flash 미반영<br>• 내부 참고 Band ±30~50%이며 보증 정확도 아님</div></div>`;
+  const metrics=hold?[
+    ['상태','결과 미채택','HOLD Guard'],['계산 도달',fmt(r.reachedLength,1,' m'),`전체 ${fmt(r.Leff,1,' m')}`],['모델 편차',fmt(r.modelDiff,1,'%'),`HOLD > ${H2O_TP_MODEL_DIFF_HOLD}%`],['입구 품질 x',fmt(r.xIn*100,2,'%'),'질량기준 vapor'],['최대 혼합유속',fmt(r.V,2,' m/s'),'HEM no-slip'],['가속항 max',fmt(r.criticalMetric,4),'1 접근 시 임계']
+  ]:[
+    ['HEM 총 ΔP',fmt(r.dP,4,' bar'),'마찰+정수두+가속'],['토출압 Outlet',fmt(r.outP,3,' barg'),'HEM 참고값'],['품질 x in→out',`${fmt(r.xIn*100,2)} → ${fmt(r.xOut*100,2)}%`,'질량기준 vapor'],['Void α in→out',`${fmt(r.alphaIn*100,2)} → ${fmt(r.alphaOut*100,2)}%`,'HEM no-slip'],['마찰 HEM / LM',`${fmt(r.dPFric,4)} / ${fmt(r.dPFricLM,4)} bar`,'동일 구간 민감도'],['모델 편차',fmt(r.modelDiff,1,'%'),`REFERENCE ≤ ${H2O_TP_MODEL_DIFF_HOLD}%`]
+  ];
+  html+='<div class="metrics">';metrics.forEach(([k,v,a])=>{html+=`<div class="metric ${hold?'bad':'info'}"><div class="mk">${k}</div><div class="mv">${v}</div><div class="ma">${a}</div></div>`;});html+='</div>';
+  html+=`<button class="detoggle" onclick="this.nextElementSibling.classList.toggle('show')">중간 계산값·모델 보기 ▾</button><div class="details">`;
+  const det=[['배관 치수 기준',r.pipeSpec?.standard||PIPE_STANDARD],['내경 D',fmt(r.D*1000,1,' mm')],['유효길이',fmt(r.Leff,1,' m')],['고도차 Δz',fmt(r.dz,1,' m')],['질량속도 G',fmt(r.G,3,' kg/m²·s')],['입구 h',fmt(r.h,3,' kJ/kg')],['입구 Tsat',fmt(r.TsatIn-T0,4,' ℃')],['입구 hf / hg',`${fmt(r.hfIn,3)} / ${fmt(r.hgIn,3)} kJ/kg`],['입구 혼합밀도',fmt(r.rho,4,' kg/m³')],['출구 혼합밀도',fmt(r.rhoOut,4,' kg/m³')],['혼합 점도',Number.isFinite(r.mu)?r.mu.toExponential(4)+' Pa·s':'미산정'],['혼합 Reynolds',fmt(r.Re,0)],['HEM 마찰계수',fmt(r.f,5)],['정수두 항',hold?'미채택':fmt(r.dPStatic,5,' bar')],['가속 항',hold?'미채택':fmt(r.dPAccel,5,' bar')],['표면장력 in→out',`${fmt(r.sigmaIn,6)} → ${fmt(r.sigmaOut,6)} N/m`],['LM X / C',`${fmt(r.lastLM?.X,4)} / ${r.lastLM?.C??'미산정'}`],['적분 구간 수',r.segmentsDone??0],['계산 모델',r.model]];
+  det.forEach(([k,v])=>{html+=`<div class="dl"><span class="dk">${k}</span><span class="dv">${v}</span></div>`;});html+='</div>';
+  html+=`<div class="disclaimer">⚠ Water/Steam 2상 계산은 순수 H₂O·평형·정상·단일 직선배관의 참고 스크리닝입니다. Slugging, 유동양식, 상간 Slip, 열손실, 응축/비등 속도, 분기 Network, Relief/Flare, Water Hammer 및 안전설계를 대체하지 않습니다. ${hold?'HOLD이므로 ΔP·출구압 숫자를 설계값으로 채택하지 마세요.':'REFERENCE 결과도 전용 다상유동 도구 또는 실증자료로 검증해야 합니다.'}</div>`;
+  $('resultDetail').innerHTML=html;lastResult={r,status,cls};
+  $('dockStatus').className='dock-status '+cls;$('dockStatus').innerHTML=`<strong>${status}</strong><small>${hold?'STOP':'2Φ'}</small>`;
+  $('dockTitle').textContent=hold?`HOLD · ${r.phaseCheck.title}`:`2상 참고 · ΔP ${round(r.dP,4)} bar`;
+  $('dockSub').textContent=hold?'전체 결과 미채택 · 상세 Guard 확인':`Out ${round(r.outP,3)} barg · x ${round(r.xIn*100,1)}→${round(r.xOut*100,1)}% · 상세검증 필요`;
+  $('resultDock').classList.toggle('show',currentView==='calc');
+}
+
+function renderGasLiquidResult(r){
+  const hold=!!r.calcStopped||!!r.modelDisagreementHold||!!r.pressureRatioHold,status=hold?'HOLD':'REFERENCE',cls=hold?'hold':'reference',icon=hold?'!':'≈';
+  const fmt=(x,n=4,s='')=>Number.isFinite(x)?round(x,n)+s:'미산정';
+  let html=`<div class="verdict ${cls}"><div class="vi">${icon}</div><div class="vt"><b>${status}</b><div>${hold?esc(r.phaseCheck.title)+' — 전체 결과 미채택':'제한적 Gas-Liquid 참고 계산 · 상세검증 필요'}</div></div></div>`;
+  html+=`<div class="alertbox ${hold?'danger':'warn'}"><b>${esc(r.phaseCheck.title)}</b><br>${esc(r.phaseCheck.msg)}</div>`;
+  html+=`<div class="quality"><div class="qh"><b>Gas-Liquid 모델 신뢰도</b><span class="qbadge d">D · EXPERIMENTAL</span></div><div class="qline">• 입력한 양상 물성의 정확성은 사용자가 확인<br>• 등온·고정 Z 기상 압축성, 고정 질량분율<br>• LM/Chisholm 주 계산 + HEM 민감도 비교<br>• 유동양식·실제 Hold-up·Slip·VLE·Flash 미반영</div></div>`;
+  const metrics=hold?[
+    ['상태','결과 미채택','HOLD Guard'],['계산 도달',fmt(r.reachedLength,1,' m'),`전체 ${fmt(r.Leff,1,' m')}`],['모델 편차',fmt(r.modelDiff,1,'%'),`HOLD > ${GL_MODEL_DIFF_HOLD}%`],['압력변화율',fmt(r.pressureDropRatio*100,2,'%'),`HOLD > ${GL_DP_RATIO_MAX*100}%`],['기상 질량분율',fmt(r.xIn*100,3,'%'),'고정 조성'],['최대 혼합유속',fmt(r.V,3,' m/s'),'No-slip']
+  ]:[
+    ['LM 총 ΔP',fmt(r.dP,4,' bar'),'마찰+정수두+가속'],['토출압 Outlet',fmt(r.outP,3,' barg'),'고정 Z 근사'],['Void α in→out',`${fmt(r.alphaIn*100,2)} → ${fmt(r.alphaOut*100,2)}%`,'No-slip'],['마찰 LM / HEM',`${fmt(r.dPFricLM,4)} / ${fmt(r.dPFricHEM,4)} bar`,'동일 압력경로'],['모델 편차',fmt(r.modelDiff,1,'%'),`REFERENCE ≤ ${GL_MODEL_DIFF_HOLD}%`],['표면유속 jL / jG',`${fmt(r.jL,3)} / ${fmt(r.jG,3)} m/s`,'출구 기준 jG']
+  ];
+  html+='<div class="metrics">';metrics.forEach(([k,v,a])=>{html+=`<div class="metric ${hold?'bad':'info'}"><div class="mk">${k}</div><div class="mv">${v}</div><div class="ma">${a}</div></div>`;});html+='</div>';
+  html+=`<button class="detoggle" onclick="this.nextElementSibling.classList.toggle('show')">중간 계산값·모델 보기 ▾</button><div class="details">`;
+  const det=[['배관 치수 기준',r.pipeSpec?.standard||PIPE_STANDARD],['내경 D',fmt(r.D*1000,1,' mm')],['유효길이',fmt(r.Leff,1,' m')],['고도차 Δz',fmt(r.dz,3,' m')],['기상 질량분율 xg',fmt(r.xIn*100,4,' wt%')],['ρL / ρG(in)',`${fmt(r.props?.rhoL,4)} / ${fmt(r.rhoGIn,5)} kg/m³`],['ρG out',fmt(r.rhoGOut,5,' kg/m³')],['μL / μG',`${Number.isFinite(r.props?.muL)?r.props.muL.toExponential(4):'미산정'} / ${Number.isFinite(r.props?.muG)?r.props.muG.toExponential(4):'미산정'} Pa·s`],['혼합밀도 in / out',`${fmt(r.rho,4)} / ${fmt(r.rhoOut,4)} kg/m³`],['혼합 Reynolds',fmt(r.Re,0)],['HEM 마찰계수',fmt(r.f,5)],['정수두 항',hold?'미채택':fmt(r.dPStatic,5,' bar')],['가속 항',hold?'미채택':fmt(r.dPAccel,5,' bar')],['LM X / C',`${fmt(r.lastLM?.X,4)} / ${r.lastLM?.C??'미산정'}`],['ReL / ReG',`${fmt(r.lastLM?.ReL,0)} / ${fmt(r.lastLM?.ReG,0)}`],['압축성 가속항 max',fmt(r.criticalMetric,5)],['적분 구간 수',r.segmentsDone??0],['계산 모델',r.model]];
+  det.forEach(([k,v])=>{html+=`<div class="dl"><span class="dk">${k}</span><span class="dv">${v}</span></div>`;});html+='</div>';
+  html+=`<div class="disclaimer">⚠ v7.2 Gas-Liquid는 비반응·비상변화·정상·수평 근사 직선배관의 실험적 참고 스크리닝입니다. 기액평형, Dew/Bubble, Flash, 용해·반응, Slugging, 실제 Liquid Hold-up, Flow Regime, 분기 Network, Relief/Flare 및 안전설계를 대체하지 않습니다. ${hold?'HOLD이므로 ΔP·출구압 숫자를 설계값으로 채택하지 마세요.':'REFERENCE도 전용 다상유동 도구 또는 실측자료로 검증해야 합니다.'}</div>`;
+  $('resultDetail').innerHTML=html;lastResult={r,status,cls};
+  $('dockStatus').className='dock-status '+cls;$('dockStatus').innerHTML=`<strong>${status}</strong><small>${hold?'STOP':'G-L'}</small>`;
+  $('dockTitle').textContent=hold?`HOLD · ${r.phaseCheck.title}`:`Gas-Liquid 참고 · ΔP ${round(r.dP,4)} bar`;
+  $('dockSub').textContent=hold?'전체 결과 미채택 · 상세 Guard 확인':`Out ${round(r.outP,3)} barg · α ${round(r.alphaIn*100,1)}→${round(r.alphaOut*100,1)}% · 상세검증 필요`;
+  $('resultDock').classList.toggle('show',currentView==='calc');
+}
+
+function calculateGasLiquid(){
+  try{
+    const Pb=parseFloat($('pres').value),flow=parseFloat($('flow').value),L=parseFloat($('len').value),dz=parseFloat($('elev').value)||0;
+    if([Pb,flow,L].some(x=>!Number.isFinite(x))||flow<=0||L<=0){alert('입력값을 확인하세요. 질량유량·길이는 0보다 커야 합니다.');return;}
+    const pipeSpec=pipeSpecFor(state.nps,state.sch);if(!pipeSpec)throw new Error('선택한 Size/Schedule의 내경 데이터가 없습니다.');
+    const P1=(Pb+1.01325)*1e5,D=pipeSpec.id/1000,A=Math.PI*D*D/4,relEps=(currentEps()/1000)/D,Leff=L*(1+state.allowance),props=readGasLiquidInputs();
+    const res=integrateGasLiquidPipe({P1,flow,D,A,relEps,Leff,straightL:L,dz,pipeSpec,props});renderGasLiquidResult(res);
+  }catch(e){console.error(e);invalidateResult();alert('Gas-Liquid 계산 오류: '+e.message);}
+}
+
+function calculateTwoPhase(){
+  try{
+    const Pb=parseFloat($('pres').value),flow=parseFloat($('flow').value),L=parseFloat($('len').value),dz=parseFloat($('elev').value)||0;
+    if([Pb,flow,L].some(x=>!Number.isFinite(x))||flow<=0||L<=0){alert('입력값을 확인하세요. 질량유량·길이는 0보다 커야 합니다.');return;}
+    const pipeSpec=pipeSpecFor(state.nps,state.sch);if(!pipeSpec)throw new Error('선택한 Size/Schedule의 내경 데이터가 없습니다.');
+    const P1=(Pb+1.01325)*1e5,D=pipeSpec.id/1000,A=Math.PI*D*D/4,relEps=(currentEps()/1000)/D,Leff=L*(1+state.allowance);
+    let h;if(state.calcMode==='px'){const x=parseFloat($('quality').value)/100;if(!Number.isFinite(x)){alert('증기품질 x를 입력하세요.');return;}try{const sat=if97SaturationPropsP(P1);h=sat.hf+x*(sat.hg-sat.hf);}catch{h=NaN;}}else{h=parseFloat($('enthalpy').value);if(!Number.isFinite(h)){alert('비엔탈피 h를 입력하세요.');return;}}
+    const res=integrateTwoPhasePipe({P1,h,flow,D,A,relEps,Leff,dz,pipeSpec});renderTwoPhaseResult(res);
+  }catch(e){console.error(e);invalidateResult();alert('2상 계산 오류: '+e.message);}
+}
+
+function calculate(){
+  invalidateResult();
+  if(state.calcMode==='gl'){calculateGasLiquid();return;}
+  if(state.calcMode!=='single'){calculateTwoPhase();return;}
+  try{
+    const Tc=parseFloat($('temp').value),Pb=parseFloat($('pres').value),flow=parseFloat($('flow').value),L=parseFloat($('len').value),dz=parseFloat($('elev').value)||0;
+    if([Tc,Pb,flow,L].some(x=>!Number.isFinite(x))||flow<=0||L<=0){alert('입력값을 확인하세요. 유량·길이는 0보다 커야 합니다.');return;}
+    if(Pb<=-1.0){alert('입구 압력은 약 -1 barg보다 커야 합니다.');return;}
+    const est=estimateProperties(state.fluid,Tc,Pb);
+    if(!est.ok){alert(est.error||'물성값을 확인하세요.');return;}
+    const pipeSpec=pipeSpecFor(state.nps,state.sch);if(!pipeSpec){alert('선택한 Size/Schedule의 내경 데이터가 없습니다.');return;}
+    const D=pipeSpec.id/1000,A=Math.PI*D*D/4,eps=currentEps()/1000,relEps=eps/D;
+    const Leff=L*(1+state.allowance),T=Tc+T0,P1=(Pb+1.01325)*1e5;
+    let res;
+    if(FLUID_DB[state.fluid].h2o){
+      res=integrateH2OPipe({key:state.fluid,T,Tc,P1,flow,unit:state.flowUnit,D,A,relEps,Leff,dz,pipeSpec});
+    }else if(est.phase==='liquid'){
+      const rho=state.override.rho??est.rho,mu=state.override.mu??est.mu;
+      let Q=state.flowUnit==='kg/h'?(flow/rho)/3600:flow/3600;
+      const V=Q/A,Re=rho*V*D/mu,ff=colebrook(Re,relEps);
+      const dPFricPa=ff*(Leff/D)*(rho*V*V/2),dPStaticPa=rho*9.80665*dz,dPTotalPa=dPFricPa+dPStaticPa;
+      const P2=Math.max(0,P1-dPTotalPa),outP=P2/1e5-1.01325;
+      res={phase:'liquid',V,Re,f:ff,dP:dPTotalPa/1e5,dPFric:dPFricPa/1e5,dPStatic:dPStaticPa/1e5,dP100:(dPFricPa/1e5)/(Leff/100),outP,rho,mu,relEps,D,pipeSpec,Leff,dz,P1,P2,T,Tc,model:'Darcy-Weisbach · 단상 비압축',choked:false};
+    }else{
+      const fluid=FLUID_DB[state.fluid],MW=est.MW,Rs=R_UNIV/(MW/1000),basis=resolveGasState(T,P1,fluid,est.Z),rhoIn=basis.rho,fixedZ=basis.source==='model'?null:basis.Z;
+      if(basis.zCheck.level==='danger')throw new Error(`${basis.label} 검증 실패: ${basis.zCheck.messages.join(' ')}`);
+      let mdot;if(state.flowUnit==='kg/h')mdot=flow/3600;else if(state.flowUnit==='Nm³/h'){const rhoN=101325*(MW/1000)/(R_UNIV*T0);mdot=flow*rhoN/3600;}else mdot=flow*rhoIn/3600;
+      const G=mdot/A,N=40,dx=Leff/N,criticalMa=1/Math.sqrt(est.k);
+      let P=P1,maxMa=0,last=null,models=new Set(),spreads=[],choked=false,chokeReason='',segmentsDone=0;
+      for(let i=0;i<N;i++){
+        const localPb=P/1e5-1.01325,loc=estimateProperties(state.fluid,Tc,localPb);
+        if(!loc.ok)throw new Error(`기체 세그먼트 ${i+1}/${N} 물성 계산 실패: ${loc.error||'원인 미상'}`);
+        const Z=fixedZ??loc.Z,rho=gasDensity(T,P,fluid,Z),mu=state.override.mu??loc.mu;
+        const Re=G*D/mu,ff=colebrook(Re,relEps),dP2=ff*(dx/D)*G*G*Z*Rs*T;
+        const Pn2=P*P-dP2;
+        if(Pn2<=0){choked=true;chokeReason=`세그먼트 ${i+1}/${N}에서 P² 해가 0 이하가 되어 등온 단상 적분을 계속할 수 없습니다.`;break;}
+        const Pn=Math.sqrt(Pn2),rhoN=gasDensity(T,Pn,fluid,Z),Vn=G/rhoN,a=Math.sqrt(Math.max(1e-9,loc.k*Z*Rs*T)),Ma=Vn/a;
+        maxMa=Math.max(maxMa,Ma);models.add(fixedZ?(basis.source==='rho'?'ρ→Z_eff':'Z override'):loc.zc.by);spreads.push(loc.zc.spread);last={loc,Z,rho:rhoN,mu,Re,ff,V:Vn,a,Ma};P=Pn;segmentsDone=i+1;
+        if(Ma>=criticalMa){choked=true;chokeReason=`등온 임계 Mach(${round(criticalMa,3)}=1/√k)에 도달했습니다. 마지막 계산점 Ma=${round(Ma,3)}.`;break;}
+      }
+      const reachedLength=segmentsDone*dx;
+      if(choked){
+        const Zlast=last?.Z??basis.Z,rhoLast=last?.rho??rhoIn,muLast=last?.mu??est.mu;
+        res={phase:'gas',V:last?.V??mdot/(A*rhoIn),Vin:mdot/(A*rhoIn),Re:last?.Re??G*D/muLast,f:last?.ff??NaN,dP:NaN,dPFric:(P1-P)/1e5,dPStatic:NaN,dP100:NaN,outP:NaN,rho:rhoIn,rhoOut:rhoLast,mu:muLast,relEps,D,pipeSpec,Z:Zlast,Zin:basis.Z,Ma:maxMa,a:last?.a??Math.sqrt(est.k*Zlast*Rs*T),choked:true,criticalMa,chokeReason,reachedLength,Leff,dz,P1,P2:P,T,Tc,model:[...models].join('→')||est.zc.by,zSpread:spreads.length?Math.max(...spreads):est.zc.spread,zc:est.zc,gasOverride:basis.source,zCheck:basis.zCheck};
+      }else{
+        const P2fric=P,dPFricBar=(P1-P2fric)/1e5;
+        const rhoFricOut=last?.rho??rhoIn,dPStaticPa=((rhoIn+rhoFricOut)/2)*9.80665*dz;
+        const P2=Math.max(0,P2fric-dPStaticPa),outPb=P2/1e5-1.01325,outLoc=P2>0?estimateProperties(state.fluid,Tc,outPb):null;
+        const Zout=fixedZ??outLoc?.Z??last?.Z??est.Z,rhoOut=P2>0?gasDensity(T,P2,fluid,Zout):0;
+        const muOut=state.override.mu??outLoc?.mu??last?.mu??est.mu,Vout=rhoOut>0?G/rhoOut:NaN,aOut=Math.sqrt(Math.max(1e-9,est.k*Zout*Rs*T)),MaOut=Vout/aOut;
+        maxMa=Math.max(maxMa,MaOut);
+        if(!Number.isFinite(Vout)||MaOut>=criticalMa){
+          choked=true;chokeReason=!Number.isFinite(Vout)?'출구 밀도 계산이 0 이하가 되어 유속을 산정할 수 없습니다.':`고도차 반영 후 출구에서 등온 임계 Mach(${round(criticalMa,3)})에 도달했습니다.`;
+          res={phase:'gas',V:last?.V??mdot/(A*rhoIn),Vin:mdot/(A*rhoIn),Re:last?.Re??NaN,f:last?.ff??NaN,dP:NaN,dPFric:dPFricBar,dPStatic:NaN,dP100:NaN,outP:NaN,rho:rhoIn,rhoOut:last?.rho??rhoIn,mu:muOut,relEps,D,pipeSpec,Z:Zout,Zin:basis.Z,Ma:maxMa,a:aOut,choked:true,criticalMa,chokeReason,reachedLength:Leff,Leff,dz,P1,P2,T,Tc,model:[...models].join('→')||est.zc.by,zSpread:spreads.length?Math.max(...spreads):est.zc.spread,zc:est.zc,gasOverride:basis.source,zCheck:basis.zCheck};
+        }else{
+          const dPStaticBar=dPStaticPa/1e5,dPTotalBar=(P1-P2)/1e5,Re=G*D/muOut,ff=last?.ff??NaN;
+          res={phase:'gas',V:Vout,Vin:mdot/(A*rhoIn),Re,f:ff,dP:dPTotalBar,dPFric:dPFricBar,dPStatic:dPStaticBar,dP100:dPFricBar/(Leff/100),outP:outPb,rho:rhoIn,rhoOut,mu:muOut,relEps,D,pipeSpec,Z:Zout,Zin:basis.Z,Ma:maxMa,a:aOut,choked:false,criticalMa,Leff,dz,P1,P2,T,Tc,model:[...models].join('→')||est.zc.by,zSpread:spreads.length?Math.max(...spreads):est.zc.spread,zc:est.zc,gasOverride:basis.source,zCheck:basis.zCheck};
+        }
+      }
+    }
+    if(!res.phaseCheck)res.phaseCheck=res.choked?{level:'danger',title:'등온 임계조건 도달 — 계산 중단',msg:`${res.chokeReason} 전체 길이의 정상 ΔP/100m와 출구압은 표시하지 않습니다. Size를 확대하거나 Fanno/등온 압축성 전용해석으로 재검토하세요.`}:phaseScreen(state.fluid,T,res.P1,res.P2,res.phase);
+    res.quality=assessQuality(res,est,L);
+    renderResult(res);
+  }catch(e){console.error(e);invalidateResult();alert('계산 오류: '+e.message);}
+}
+
+function assessQuality(r,est,straightL){
+  const f=FLUID_DB[state.fluid],reasons=[];let u=f.conf==='high'?12:f.conf==='mid'?18:f.conf==='manual'?10:25;
+  if(r.isH2O){u=10;reasons.push(`IAPWS-IF97 Region ${r.regions||r.h2oIn?.region||'미산정'} + IAPWS 2008 점도`);reasons.push('등온 압축성 Darcy 구간 적분');if(f.coolingWater)reasons.push('Cooling Water 조성 미반영: 일반 순수 물 근사 안내(등급 감점 없음)');if(r.h2oIn?.level==='warn'||r.h2oOut?.level==='warn'){u+=12;reasons.push('포화선 또는 임계점 근접');}}
+  if(f.custom){reasons.push('사용자 입력 물성 기준');if(!(state.override.rho&&state.override.mu))u=50;}
+  if(f.solutionModel==='naoh'){u=Math.max(u,28);reasons.push('NaOH 농도·온도 표 보간');if(est.propertyClamped){u+=12;reasons.push('NaOH 표 범위 밖: 20~100℃/0~50 wt% 경계값으로 클램프');}}
+  if(['VCM_L','CL2_L'].includes(state.fluid)){u+=7;reasons.push('가압 액체 기준점 물성 근사');}
+  if(r.phase==='gas'&&!r.isH2O){
+    if(r.model.includes('PR')){u+=5;reasons.push('PR EOS 현장근사 사용');}
+    if(r.model.includes('DAK'))reasons.push('DAK 천연가스 상관식');
+    if(r.zSpread>5){u+=Math.min(15,r.zSpread*0.45);reasons.push(`Z 모델 편차 ${round(r.zSpread,1)}%`);}
+    if(est.zc?.nearCritical){u+=18;reasons.push('임계점 근접');}
+    if(state.fluid==='H2'&&est.zc?.pitzer?.Pr>3){u+=8;reasons.push('고압 수소');}
+    if(r.zCheck?.level==='warn'){u+=15;reasons.push(...r.zCheck.messages);}
+    if(r.choked){u=60;reasons.push(r.chokeReason||'등온 임계조건 도달');}
+  }
+  if(r.calcStopped){u=60;reasons.push(r.stopReason||'IF97 단상 적분 중단');}
+  if(FLUID_DB[state.fluid].validT){const[a,b]=FLUID_DB[state.fluid].validT;if(r.Tc<a||r.Tc>b){u+=15;reasons.push(`물성식 온도범위(${a}~${b}℃) 밖`);}}
+  if(Number.isFinite(r.Re)&&r.Re>=2000&&r.Re<=4500){u+=12;reasons.push('천이유동 영역');}
+  if(state.allowance===0){u+=6;reasons.push('부속손실 미반영');}else reasons.push(`부속 등가길이 +${round(state.allowance*100,0)}%`);
+  if(r.phaseCheck.level==='warn'){u+=15;reasons.push(r.phaseCheck.title);}
+  if(r.phaseCheck.level==='danger'){u=60;reasons.push(r.choked?'임계조건으로 정상 결과 미산정':'2상/상태 불일치 가능');}
+  if(r.phaseCheck.level==='unknown'){u+=6;reasons.push('상평형 자동판정 불가');}
+  if(state.override.rho&&state.override.mu){u=Math.max(8,u-5);reasons.push('ρ·μ 사용자 입력');}
+  u=clamp(Math.round(u),8,60);
+  if(Math.abs(r.dz)>0.01){reasons.push(`고도차 ${r.dz>0?'+':''}${round(r.dz,1)} m 반영`);if(r.phase==='gas'&&Math.abs(r.dz)>10)u=Math.min(60,u+4);}
+  const grade=u<=12?'A':u<=20?'B':u<=30?'C':'D';
+  if(r.calcStopped||r.choked||!Number.isFinite(r.dP))return {uncertainty:u,grade,reasons,dpLow:NaN,dpHigh:NaN,outLow:NaN,outHigh:NaN};
+  const raw1=(r.dPStatic||0)+(r.dPFric||r.dP)*(1-u/100),raw2=(r.dPStatic||0)+(r.dPFric||r.dP)*(1+u/100);
+  const dpLow=Math.min(raw1,raw2),dpHigh=Math.max(raw1,raw2);
+  const outHigh=r.P1/1e5-1.01325-dpLow,outLow=r.P1/1e5-1.01325-dpHigh;
+  return {uncertainty:u,grade,reasons,dpLow,dpHigh,outLow,outHigh};
+}
+
+// ── 8. 판정/출력 ──
+function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+function renderResult(r){
+  const lim=activeLimitFor(r.phase),fails=[],m=[],isStopped=!!r.choked||!!r.calcStopped;
+  if(isStopped){
+    m.push({k:'유속 Velocity',v:Number.isFinite(r.V)?round(r.V,2)+' m/s':'미산정',a:'마지막 유효 계산점',bad:true});
+    m.push({k:'ΔP / 100m',v:'미산정',a:'전체 길이 적분 미완료',bad:true});
+    if(r.phase==='gas')m.push({k:'Mach No.',v:Number.isFinite(r.Ma)?round(r.Ma,3):'미산정',a:r.isH2O?'IF97 음속 기준 마지막값':`등온 임계 ${round(r.criticalMa,3)}`,bad:true});
+    m.push({k:'토출압 Outlet',v:'미산정',a:'정상 단상 결과 채택 금지',bad:true});
+    m.push({k:'계산 도달 길이',v:round(r.reachedLength||0,1)+' m',a:`전체 ${round(r.Leff,1)} m`,info:true});
+    m.push({k:'신뢰도 등급',v:'D · HOLD',a:'상태·Size·상세해석 확인',info:true});
+  }else{
+    const vBad=r.V>lim.V;if(vBad)fails.push('유속');m.push({k:'유속 Velocity',v:round(r.V,2)+' m/s',a:'기준 ≤ '+lim.V,bad:vBad});
+    const dpBad=r.dP100>lim.dP100;if(dpBad)fails.push('ΔP');m.push({k:'ΔP / 100m',v:round(r.dP100,3)+' bar',a:'기준 ≤ '+lim.dP100,bad:dpBad});
+    if(r.phase==='gas'){const maBad=r.Ma>lim.Ma;if(maBad)fails.push('Mach');m.push({k:'Mach No.',v:round(r.Ma,3),a:r.isH2O?`판정 ≤ ${lim.Ma} · IF97 음속`:`판정 ≤ ${lim.Ma} · 임계 ${round(r.criticalMa,3)}`,bad:maBad});}
+    const minOutBad=lim.minOut!=null&&r.outP<lim.minOut;if(minOutBad)fails.push('출구압');
+    m.push({k:'토출압 Outlet',v:round(r.outP,2)+' barg',a:lim.minOut==null?`범위 ${round(r.quality.outLow,2)}~${round(r.quality.outHigh,2)}`:`최소 ${lim.minOut} barg`,bad:r.outP<0||minOutBad});
+    m.push({k:'예상 계산오차',v:'±'+r.quality.uncertainty+'%',a:'ΔP 추정 band',info:true});
+    m.push({k:'총 ΔP 범위',v:`${round(r.quality.dpLow,3)}~${round(r.quality.dpHigh,3)} bar`,a:'보증값 아님',info:true});
+  }
+  const hold=isStopped||r.phaseCheck.level==='danger',zCaution=r.zCheck?.level==='warn',caution=!hold&&(r.quality.grade==='D'||r.phaseCheck.level==='warn'||zCaution);
+  const status=hold?'HOLD':fails.length?'FAIL':caution?'CAUTION':'PASS';
+  const cls=hold?'hold':fails.length?'fail':caution?'caution':'pass',icon=hold?'!':fails.length?'✕':caution?'△':'✓';
+  const subtitle=isStopped?`${r.phaseCheck.title} — 전체 길이 결과 미산정`:hold?'2상/상태 불일치 가능 — 단상 결과 채택 금지':fails.length?'초과: '+fails.join(', '):caution?'계산 가능하나 추가 확인 필요':'현장 1차 기준 통과';
+  let html=`<div class="verdict ${cls}"><div class="vi">${icon}</div><div class="vt"><b>${status}</b><div>${subtitle}</div></div></div>`;
+  html+=`<div class="alertbox info"><b>적용 기준: ${esc(currentProfileName())}</b><br>${isStopped?'저장 기준과 비교하기 전에 단상 적분을 중단했습니다.':'유속·압력강하·Mach·최소 출구압력을 저장된 프로파일과 비교했습니다.'}</div>`;
+  if(r.zCheck?.level==='warn')html+=`<div class="alertbox warn"><b>기체 Z 입력 Sanity 경고</b><br>${esc(r.zCheck.messages.join(' '))}</div>`;
+  const pc=r.phaseCheck,abox=pc.level==='danger'?'danger':pc.level==='warn'?'warn':'info';
+  html+=`<div class="alertbox ${abox}"><b>${esc(pc.title)}</b><br>${esc(pc.msg)}</div>`;
+  html+=`<div class="quality"><div class="qh"><b>계산 신뢰도 / 예상 오차</b><span class="qbadge ${r.quality.grade.toLowerCase()}">${r.quality.grade} · ${isStopped?'결과 미산정':'±'+r.quality.uncertainty+'%'}</span></div><div class="qline">${r.quality.reasons.map(x=>'• '+esc(x)).join('<br>')}</div></div>`;
+  html+='<div class="metrics">';m.forEach(x=>{html+=`<div class="metric ${x.bad?'bad':x.info?'info':'ok'}"><div class="mk">${x.k}</div><div class="mv">${x.v}</div><div class="ma">${x.a}</div></div>`;});html+='</div>';
+  html+=`<button class="detoggle" onclick="this.nextElementSibling.classList.toggle('show')">중간 계산값·모델 보기 ▾</button><div class="details">`;
+  const fmt=(x,n=4,suffix='')=>Number.isFinite(x)?round(x,n)+suffix:'미산정';
+  const det=[['적용 기준',currentProfileName()],['배관 치수 기준',r.pipeSpec?.standard||PIPE_STANDARD],['외경 OD',fmt(r.pipeSpec?.od,1,' mm')],['벽두께 t',fmt(r.pipeSpec?.wall,2,' mm')],['Reynolds 수',fmt(r.Re,0)],['마찰계수 f',fmt(r.f,5)],['상대조도 ε/D',Number.isFinite(r.relEps)?r.relEps.toExponential(2):'미산정'],['내경 D',fmt(r.D*1000,1,' mm')],['유효길이',fmt(r.Leff,1,' m')],['고도차 Δz',`${r.dz>0?'+':''}${round(r.dz,1)} m`],['마찰 ΔP',fmt(r.dPFric,4,' bar')],['정수두 ΔP',fmt(r.dPStatic,4,' bar')],['밀도 ρ(in)',fmt(r.rho,3,' kg/m³')],['점도 μ',Number.isFinite(r.mu)?r.mu.toExponential(3)+' Pa·s':'미산정'],['계산 모델',r.model]];
+  if(r.phase==='gas')det.push(['압축계수 Z(in→last)',`${fmt(r.Zin,4)} → ${fmt(r.Z,4)}`],['마지막/출구 밀도',fmt(r.rhoOut,3,' kg/m³')],['음속 a',fmt(r.a,1,' m/s')],['입구 유속',fmt(r.Vin,2,' m/s')]);
+  if(r.phase==='gas'&&!r.isH2O)det.push(['등온 임계 Mach',fmt(r.criticalMa,3)],['계산 도달 길이',fmt(r.reachedLength??r.Leff,1,' m')]);
+  if(r.isH2O)det.push(['IF97 Region 경로',r.regions||'미산정'],['IF97 실제 상태',phaseNameKo(r.h2oOut?.actualPhase)],['엔탈피 h(out)',fmt(r.h2oOut?.h,3,' kJ/kg')],['Cp / Cv',`${fmt(r.h2oOut?.cp,4)} / ${fmt(r.h2oOut?.cv,4)} kJ/kg·K`],['등온압축률 κT',Number.isFinite(r.h2oOut?.kappaT)?r.h2oOut.kappaT.toExponential(4)+' 1/Pa':'미산정'],['등온 가속항 max',fmt(r.criticalMetric,5)],['적분 구간 수',r.segmentsDone??0],['계산 도달 길이',fmt(r.reachedLength??r.Leff,1,' m')]);
+  if(pc.Psat)det.push([r.isH2O?'IF97 포화압력 Psat':'추정 포화압력 Psat',round(pc.Psat/1e5,5)+' bara']);
+  if(pc.Tsat)det.push(['IF97 포화온도 Tsat',round(pc.Tsat-T0,4)+' ℃']);
+  if(pc.satMarginK!=null)det.push(['포화온도 여유 |T-Tsat|',round(Math.abs(pc.satMarginK),4)+' ℃']);
+  if(pc.Tr!=null)det.push(['환산온도 Tr',round(pc.Tr,4)]);if(pc.Pr1!=null)det.push(['입구 환산압력 Pr',round(pc.Pr1,4)]);
+  det.forEach(([k,v])=>{html+=`<div class="dl"><span class="dk">${k}</span><span class="dv">${v}</span></div>`;});html+='</div>';
+  html+=`<div class="disclaimer">⚠ FIELD/FEED 1차 스크리닝 전용입니다. ${isStopped?'HOLD에서는 전체 길이 ΔP·출구압을 산정하지 않았으며 표시된 마지막 계산점도 설계값으로 채택하면 안 됩니다.':`표시 오차(±${r.quality.uncertainty}%)는 공학적 추정 band이며 보증 정확도가 아닙니다.`} Water/Steam 열손실·응축·비등은 단상 모드에서 계산하지 않습니다. Gas-Liquid는 별도 2Φ 모드에서만 제한적으로 계산합니다. EDC·VCM·Cl₂·NaOH의 독성, 부식, 재질 적합성 및 안전설계도 본 수리계산 범위 밖입니다.</div>`;
+  $('resultDetail').innerHTML=html;
+  lastResult={r,status,cls};
+  $('dockStatus').className='dock-status '+cls;$('dockStatus').innerHTML=`<strong>${status}</strong><small>${isStopped?'STOP':'±'+r.quality.uncertainty+'%'}</small>`;
+  if(isStopped){$('dockTitle').textContent=`HOLD · ${r.phaseCheck.title}`;$('dockSub').textContent='전체 길이 결과 미산정 · 상태/Size/상세해석 확인';}
+  else if(hold){$('dockTitle').textContent=`HOLD · ${r.phaseCheck.title}`;$('dockSub').textContent='단상 결과 채택 금지 · 상세 결과 확인';}
+  else{$('dockTitle').textContent=`${currentProfileName()} · v ${round(r.V,1)} m/s · ΔP ${round(r.dP100,3)} bar/100m`;$('dockSub').textContent=`Out ${round(r.outP,2)} barg · ${r.phase==='gas'?'Ma '+round(r.Ma,3):'Re '+round(r.Re,0)} · 상세 보기`;}
+  $('resultDock').classList.toggle('show',currentView==='calc');
+}
+
+// ── 9. 휠/바텀시트 ──
+const ITEM_H=44;let wheelCtx=null;
+function openWheel(title,items,curIdx,onDone){wheelCtx={items,index:Math.max(0,curIdx),onDone,offset:-Math.max(0,curIdx)*ITEM_H,vel:0,dragging:false};$('wheelTitle').textContent=title;const ul=$('wheelList');ul.innerHTML='';items.forEach(it=>{const li=document.createElement('li');li.textContent=it;ul.appendChild(li);});applyWheel();$('wheelScrim').classList.add('show');}
+function applyWheel(){const ul=$('wheelList');ul.style.transform=`translateY(${wheelCtx.offset}px)`;const idx=Math.round(-wheelCtx.offset/ITEM_H);[...ul.children].forEach((li,i)=>li.classList.toggle('center',i===idx));}
+function wheelEnd(){let idx=Math.round(-wheelCtx.offset/ITEM_H);idx=Math.max(0,Math.min(wheelCtx.items.length-1,idx));wheelCtx.index=idx;wheelCtx.offset=-idx*ITEM_H;$('wheelList').style.transition='transform .18s ease-out';applyWheel();setTimeout(()=>{$('wheelList').style.transition='';},180);}
+(function bindWheel(){const wheel=$('wheel');let lastY=0,lastT=0;const down=y=>{if(!wheelCtx)return;wheelCtx.dragging=true;wheelCtx.vel=0;lastY=y;lastT=Date.now();$('wheelList').style.transition='';};const move=y=>{if(!wheelCtx||!wheelCtx.dragging)return;const dy=y-lastY;wheelCtx.offset+=dy;const now=Date.now();wheelCtx.vel=dy/Math.max(1,now-lastT)*16;lastY=y;lastT=now;applyWheel();};const up=()=>{if(!wheelCtx||!wheelCtx.dragging)return;wheelCtx.dragging=false;let v=wheelCtx.vel;const inertia=()=>{if(Math.abs(v)<0.5||wheelCtx.dragging){wheelEnd();return;}wheelCtx.offset+=v;v*=0.92;const max=0,min=-(wheelCtx.items.length-1)*ITEM_H;if(wheelCtx.offset>max+ITEM_H){wheelCtx.offset=max+ITEM_H;v=0;}if(wheelCtx.offset<min-ITEM_H){wheelCtx.offset=min-ITEM_H;v=0;}applyWheel();requestAnimationFrame(inertia);};requestAnimationFrame(inertia);};wheel.addEventListener('touchstart',e=>down(e.touches[0].clientY),{passive:true});wheel.addEventListener('touchmove',e=>{move(e.touches[0].clientY);e.preventDefault();},{passive:false});wheel.addEventListener('touchend',up);wheel.addEventListener('mousedown',e=>down(e.clientY));window.addEventListener('mousemove',e=>{if(wheelCtx?.dragging)move(e.clientY);});window.addEventListener('mouseup',up);})();
+$('wheelDone').onclick=()=>{if(wheelCtx)wheelCtx.onDone(wheelCtx.index);$('wheelScrim').classList.remove('show');};$('wheelCancel').onclick=()=>$('wheelScrim').classList.remove('show');$('wheelScrim').onclick=e=>{if(e.target===$('wheelScrim'))$('wheelScrim').classList.remove('show');};
+
+$('npsBtn').onclick=()=>openWheel('배관 Size',NPS_LIST,NPS_LIST.indexOf(state.nps),i=>{state.nps=NPS_LIST[i];$('npsLbl').textContent=state.nps;const list=schListFor(state.nps);state.sch=pickCompatibleSchedule(state.sch,list);$('schLbl').textContent=state.sch;invalidateResult();});
+$('schBtn').onclick=()=>{const list=schListFor(state.nps);openWheel('Schedule',list,Math.max(0,list.indexOf(state.sch)),i=>{state.sch=list[i];$('schLbl').textContent=state.sch;invalidateResult();});};
+$('flowUnitBtn').onclick=()=>{const list=flowUnits();openWheel('유량 단위',list,Math.max(0,list.indexOf(state.flowUnit)),i=>{state.flowUnit=list[i];$('flowUnitLbl').textContent=state.flowUnit;invalidateResult();});};
+$('matBtn').onclick=()=>openWheel('배관 재질',MATERIALS.map(m=>m.label),MATERIALS.findIndex(m=>m.key===state.mat),i=>{state.mat=MATERIALS[i].key;$('matLbl').textContent=MATERIALS[i].label;delete state.override.eps;invalidateResult();renderEst();});
+$('allowBtn').onclick=()=>openWheel('부속·밸브 여유',ALLOWANCES.map(x=>x.label),ALLOWANCES.findIndex(x=>x.v===state.allowance),i=>{state.allowance=ALLOWANCES[i].v;$('allowLbl').textContent=ALLOWANCES[i].label;invalidateResult();});
+
+function renderFluidList(filter=''){const list=$('fluidList');list.innerHTML='';const fl=filter.toLowerCase(),ents=Object.entries(FLUID_DB).filter(([k,f])=>f.phase===state.phase&&(f.label.toLowerCase().includes(fl)||k.toLowerCase().includes(fl)));if(!ents.length){list.innerHTML='<div class="nores">검색 결과 없음</div>';return;}ents.forEach(([k,f])=>{const d=document.createElement('div');d.className='fitem'+(k===state.fluid?' sel':'');d.innerHTML=`<span class="fn">${f.label}</span><span class="ft">${f.conf==='high'?'High':f.conf==='mid'?'Mid':f.conf==='low'?'Low':'Manual'} · ${f.note}</span>`;d.onclick=()=>{state.fluid=k;$('fluidLbl').textContent=f.label;state.override={};invalidateResult();$('fluidScrim').classList.remove('show');renderModeInputs();renderSpecialInputs();renderPresetChips();renderEst();};list.appendChild(d);});}
+$('fluidBtn').onclick=()=>{$('fluidSearch').value='';renderFluidList();$('fluidScrim').classList.add('show');};$('fluidSearch').oninput=e=>renderFluidList(e.target.value);$('fluidCancel').onclick=()=>$('fluidScrim').classList.remove('show');$('fluidScrim').onclick=e=>{if(e.target===$('fluidScrim'))$('fluidScrim').classList.remove('show');};
+
+$('phaseSeg').querySelectorAll('button').forEach(b=>{b.onclick=()=>{state.phase=b.dataset.ph;state.calcMode=state.phase==='two-phase'?'gl':'single';$('phaseSeg').querySelectorAll('button').forEach(x=>x.classList.toggle('act',x===b));if(state.phase!=='two-phase'){state.fluid=state.phase==='gas'?'NG':'WATER';state.flowUnit=state.phase==='gas'?'Nm³/h':'m³/h';$('fluidLbl').textContent=FLUID_DB[state.fluid].label;}else state.flowUnit='kg/h';$('flowUnitLbl').textContent=state.flowUnit;state.override={};invalidateResult();renderModeInputs();renderSpecialInputs();renderPresetChips();renderEst();};});
+$('calcModeSeg').querySelectorAll('button').forEach(b=>{b.onclick=()=>{state.calcMode=b.dataset.mode;state.override={};invalidateResult();renderModeInputs();renderEst();};});
+$('flow').addEventListener('input',invalidateResult);
+$('len').addEventListener('input',invalidateResult);
+$('elev').addEventListener('input',invalidateResult);
+$('temp').addEventListener('input',()=>{invalidateResult();renderEst();});
+$('pres').addEventListener('input',()=>{invalidateResult();renderPresetChips();renderSatPreview();renderEst();});
+$('quality').addEventListener('input',()=>{invalidateResult();renderSatPreview();renderEst();});
+$('enthalpy').addEventListener('input',()=>{invalidateResult();renderSatPreview();renderEst();});
+$('conc').addEventListener('input',()=>{state.override={};invalidateResult();renderSpecialInputs();renderEst();});
+['glQuality','glRhoL','glMuL','glRhoG','glMuG'].forEach(id=>$(id).addEventListener('input',()=>{invalidateResult();renderEst();}));
+$('airWaterSampleBtn').onclick=()=>{$('glQuality').value='0.3';$('glRhoL').value='998.2';$('glMuL').value='1.002';$('glRhoG').value='1.204';$('glMuG').value='0.0181';$('pres').value='0';$('flow').value='10000';$('len').value='100';$('elev').value='0';state.nps='4"';state.sch='Sch 40 (STD)';$('npsLbl').textContent=state.nps;$('schLbl').textContent=state.sch;invalidateResult();renderPresetChips();renderEst();};
+$('calcBtn').onclick=calculate;
+$('profileSelect').onchange=e=>{appSettings.activeProfile=e.target.value;persistSettings();$('settingsProfileSelect').value=e.target.value;renderSettingsForm();if(lastResult)calculate();};
+$('settingsProfileSelect').onchange=renderSettingsForm;$('saveSettingsBtn').onclick=saveSettings;$('resetSettingsBtn').onclick=resetSettings;
+$('profileSettingsBtn').onclick=()=>showView('settings');$('headerSettingsBtn').onclick=()=>showView('settings');
+document.querySelectorAll('.nav-btn[data-view]').forEach(b=>b.onclick=()=>showView(b.dataset.view));
+$('resultDockBtn').onclick=()=>$('resultScrim').classList.add('show');$('resultClose').onclick=()=>$('resultScrim').classList.remove('show');$('resultScrim').onclick=e=>{if(e.target===$('resultScrim'))$('resultScrim').classList.remove('show');};
+populateProfileSelects();renderSettingsForm();renderModeInputs();renderSpecialInputs();renderPresetChips();renderEst();
+</script>
+</body>
+</html>
