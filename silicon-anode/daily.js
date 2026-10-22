@@ -1,8 +1,15 @@
 /* DAILY_UPDATE_START */
 const DAILY={
-  updatedAt:"2026-10-21",
-  summary:"공식 원출처 신규사실 3건. 연구셀 성능·공장 총 capacity·상업화 계획을 qualification·양산·실제 출하와 구분합니다.",
+  updatedAt:"2026-10-23",
+  summary:"공식 원출처 신규사실 1건. 완제품의 silicon-carbon battery 채택을 소재 qualification·양산·실제 출하와 구분합니다.",
   items:[
+    {
+      date:"2026-10-21",
+      type:"Company Official · LiB",
+      title:"OPPO Find X10 Series — 8,000 mAh Silicon-Carbon Battery",
+      text:"OPPO는 Find X10 및 Find X10 Pro Max에 최대 8,000 mAh Silicon-Carbon Battery를 탑재했다고 공식 발표했다. 공식 인도 사양의 typical energy는 각각 30 Wh와 29.76 Wh이며 최대 80 W 유선·50 W 무선 충전을 지원한다. 공개자료에는 음극의 silicon 함량·구조·공급사·qualification·실제 소재 출하가 제시되지 않았으므로 완제품 출시를 특정 소재의 양산 또는 공급 증거로 해석할 수 없다.",
+      url:"https://www.oppo.com/en/newsroom/press/oppo-find-x10-series-global-launch/"
+    },
     {
       date:"2026-10-20",
       type:"Research Institute Official · LiB",
