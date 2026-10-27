@@ -1,8 +1,15 @@
 /* DAILY_UPDATE_START */
 const DAILY={
-  updatedAt:"2026-10-23",
-  summary:"공식 원출처 신규사실 1건. 완제품의 silicon-carbon battery 채택을 소재 qualification·양산·실제 출하와 구분합니다.",
+  updatedAt:"2026-10-28",
+  summary:"공식 원출처 신규사실 1건. 고체전해질 연속 Pilot Line commissioning을 Si-C 음극 qualification·양산·출하와 구분합니다.",
   items:[
+    {
+      date:"2026-10-26",
+      type:"Company Official · SSB",
+      title:"Solid Power — MOBIUS™ continuous electrolyte pilot line commissioning",
+      text:"Solid Power는 황화물계 고체전해질 연속 제조 Pilot Line에 원료 투입을 시작하며 commissioning을 진행한다고 발표했다. 회사 기준 연간 electrolyte capacity 150% 확대 설계이고 primary powder processing SAT는 완료됐지만, full SAT와 operational startup은 아직 계획 단계다. 이 발표에는 실리콘 음극 조성·Si-C 공급사·qualification·실제 소재 출하가 제시되지 않아 SSB 공정 진척을 Si-C 성장으로 해석할 수 없다.",
+      url:"https://www.solidpowerbattery.com/investor-relations/investor-news/news-details/2026/Solid-Power-Announces-Significant-Advancement-in-Commercial-Pathway-Commissioning-MOBIUS-Continuous-Electrolyte-Manufacturing-Line/default.aspx"
+    },
     {
       date:"2026-10-21",
       type:"Company Official · LiB",
