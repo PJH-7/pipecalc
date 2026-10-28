@@ -1,8 +1,15 @@
 /* DAILY_UPDATE_START */
 const DAILY={
-  updatedAt:"2026-10-28",
-  summary:"공식 원출처 신규사실 1건. 고체전해질 연속 Pilot Line commissioning을 Si-C 음극 qualification·양산·출하와 구분합니다.",
+  updatedAt:"2026-10-29",
+  summary:"공식 규제공시 신규사실 1건. 실리콘 음극재 공장 EPC 계약을 공장 가동·qualification·양산·실제 출하와 구분합니다.",
   items:[
+    {
+      date:"2026-10-26",
+      type:"Regulatory Filing · Common/LiB",
+      title:"DYPNF–Hana Materials — silicon anode plant EPC contract",
+      text:"금융감독원 DART 공시에 따르면 디와이피엔에프는 하나머티리얼즈와 충남 아산 실리콘 음극재 양산공장 건설사업 EPC 계약을 체결했다. 계약금액은 47,955,620,626원(부가세 제외), 계약기간은 2026-10-26~2027-08-31이다. 공개 공시에는 공장/Train/Reactor 수, 생산능력의 정의, Reactor 형식, 고객 qualification·PPAP·실제 출하가 제시되지 않았으므로 EPC 계약을 공장 가동이나 상업생산 완료로 해석할 수 없다.",
+      url:"https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261026900344"
+    },
     {
       date:"2026-10-26",
       type:"Company Official · SSB",
