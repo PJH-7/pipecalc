@@ -1,13 +1,20 @@
 /* DAILY_UPDATE_START */
 const DAILY={
-  updatedAt:"2026-10-29",
-  summary:"공식 규제공시 신규사실 1건. 실리콘 음극재 공장 EPC 계약을 공장 가동·qualification·양산·실제 출하와 구분합니다.",
+  updatedAt:"2026-10-30",
+  summary:"공식 신규사실 1건. Group14의 유럽 10 GWh 신규 생산거점 계획을 확인했으며 계획·Nameplate와 Qualified Output·Actual Shipment를 구분합니다.",
   items:[
+    {
+      date:"2026-10-29",
+      type:"Company Official · LiB/Common",
+      title:"Group14 — Spain BAM-4 10 GWh manufacturing plan",
+      text:"Group14는 €150M Series D equity extension을 마감하고 스페인 Sagunto에 초기 10 GWh BAM-4 module을 계획한다고 공식 발표했다. 회사는 2028년 건설 착수를 계획한다. BAM-3 10 GWh는 operational and scaling, BAM-2 20 GWh는 2027년 생산 개시 예상이라는 회사 표현이며, material t/y·Qualified Output·Actual Shipment·Yield/OEE·customer qualification은 공개자료에서 확인되지 않는다.",
+      url:"https://group14.technology/resources/press-releases/group14-closes-e150m-series-d-extension-to-accelerate-global-manufacturing-footprint/"
+    },
     {
       date:"2026-10-26",
       type:"Regulatory Filing · Common/LiB",
-      title:"DYPNF–Hana Materials — silicon anode plant EPC contract",
-      text:"금융감독원 DART 공시에 따르면 디와이피엔에프는 하나머티리얼즈와 충남 아산 실리콘 음극재 양산공장 건설사업 EPC 계약을 체결했다. 계약금액은 47,955,620,626원(부가세 제외), 계약기간은 2026-10-26~2027-08-31이다. 공개 공시에는 공장/Train/Reactor 수, 생산능력의 정의, Reactor 형식, 고객 qualification·PPAP·실제 출하가 제시되지 않았으므로 EPC 계약을 공장 가동이나 상업생산 완료로 해석할 수 없다.",
+      title:"Korea — silicon anode plant construction signal",
+      text:"금융감독원 공식 공시를 통해 국내 아산의 실리콘 음극재 공장 건설 프로젝트 진행 신호를 확인했다. 공개판에는 계약가격·상세조건을 복제하지 않는다. 공시에는 공장/Train/Reactor 수, 생산능력 정의, Reactor 형식, customer qualification·PPAP·실제 출하가 제시되지 않아 공장 가동이나 상업생산 완료로 해석할 수 없다.",
       url:"https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261026900344"
     },
     {
