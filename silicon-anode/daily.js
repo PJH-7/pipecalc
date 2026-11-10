@@ -1,8 +1,15 @@
 /* DAILY_UPDATE_START */
 const DAILY={
-  updatedAt:"2026-10-30",
-  summary:"공식 신규사실 1건. Group14의 유럽 10 GWh 신규 생산거점 계획을 확인했으며 계획·Nameplate와 Qualified Output·Actual Shipment를 구분합니다.",
+  updatedAt:"2026-11-11",
+  summary:"2026-11-11 공개 Amprius 2026 Q3 실적: 매출 US$39.1M(+83% YoY), 미국 셀 제조능력 확장은 2028년 계획. Battery Cell 사업 실적과 Si-C Powder 상업생산 실증을 분리합니다.",
   items:[
+    {
+      "date": "2026-11-10",
+      "type": "Official Earnings Release · LiB",
+      "title": "Amprius — Q3 2026 financial results and U.S. cell-line conversion plan",
+      "text": "Amprius는 2026년 3분기 매출 US$39.1M(+83% 전년 대비), 매출총이익 US$10.5M, 27% gross margin을 발표했다. 미국 국방 관련 US$75M 계약/지원의 2028년 연 최대 12M cells 생산은 계획값이며 현재 Qualified Output·출하가 아니다. SiCore 500의 500 Wh/kg은 기존 9월 발표된 Cell 기준 성능이며 Si-C Powder CVD/CVI 실적을 뜻하지 않는다.",
+      "url": "https://ir.amprius.com/news-events/press-releases/detail/177/amprius-technologies-reports-third-quarter-2026-financial-results-and-recent-business-highlights"
+    },
     {
       date:"2026-10-29",
       type:"Company Official · LiB/Common",
