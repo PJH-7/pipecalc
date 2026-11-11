@@ -1,8 +1,17 @@
 /* DAILY_UPDATE_START */
 const DAILY={
-  updatedAt:"2026-11-11",
-  summary:"2026-11-11 공개 Amprius 2026 Q3 실적: 매출 US$39.1M(+83% YoY), 미국 셀 제조능력 확장은 2028년 계획. Battery Cell 사업 실적과 Si-C Powder 상업생산 실증을 분리합니다.",
+  updatedAt:"2026-11-12",
+  summary:"2026-11-12 공개 업데이트: Amprius는 공식 Q3 프레젠테이션에서 미국 전환 라인을 230 MWh, CAMINUS Indianapolis pouch-cell 양산을 2027년 1분기 계획으로 제시했습니다. 계획 생산능력과 실제 Qualified Output·출하를 구분합니다.",
   items:[
+    {
+        "date": "2026-11-11",
+        "type": "Official Company Presentation · LiB",
+        "title": "Amprius — 230 MWh 미국 라인 전환 및 2027 Q1 pouch-cell 양산 계획",
+        "text": "Amprius의 공식 Q3 2026 프레젠테이션은 미국 기존 EV 배터리 라인 전환 계획을 230 MWh로 제시하고, CAMINUS Indianapolis 라인의 pouch-cell volume production을 2027년 1분기 계획으로 표시했습니다. 두 수치는 회사의 향후 계획이며 고객 Qualification, 양산 수율, Qualified Output 또는 실제 출하 실적과는 구분해야 합니다. Cell format과 조성이 공개되지 않아 소재 생산량으로 환산할 수 없습니다.",
+        "url": "https://d1io3yog0oux5.cloudfront.net/_ac18648a83da1b94423b36530e4a3533/amprius/db/2337/29870/presentation/Amprius_Technologies_Q3_2026_Earnings_Presentation.pdf",
+        "change": "Update + Verify",
+        "track": "LiB / Silicon-anode cells"
+    },
     {
       "date": "2026-11-10",
       "type": "Official Earnings Release · LiB",
