@@ -1,8 +1,22 @@
 /* DAILY_UPDATE_START */
 const DAILY={
-  updatedAt:"2026-11-12",
-  summary:"2026-11-12 공개 업데이트: Amprius는 공식 Q3 프레젠테이션에서 미국 전환 라인을 230 MWh, CAMINUS Indianapolis pouch-cell 양산을 2027년 1분기 계획으로 제시했습니다. 계획 생산능력과 실제 Qualified Output·출하를 구분합니다.",
+  updatedAt:"2026-11-18",
+  summary:"2026-11-18 공개 업데이트: KAIST의 graphite-silicon 복합음극 계면 연구와 HPQ Gen4 셀 적용 제품·향후 인도 계획을 반영했습니다. 연구 후보와 회사 계획을 상업 양산·실제 출하와 구분합니다.",
   items:[
+    {
+      date:"2026-11-17",
+      type:"Official Research · LiB",
+      title:"KAIST — graphite-silicon 복합음극 첨가제 상호작용 연구",
+      text:"KAIST는 기존 첨가제 조합의 분해 상호작용이 음극 보호막을 약화할 수 있음을 밝히고, TPAB를 적용한 고니켈 양극/흑연·실리콘 복합음극 셀에서 계면 안정화와 성능 유지 개선을 보고했습니다. 공개 연구결과는 Cell-level 후보이며 소재 제조공정이나 상업 양산 증거와는 구분해야 합니다.",
+      url:"https://kaist.ac.kr/site/news/html/news/?GotoPage=1&mng_no=69590&mode=V"
+    },
+    {
+      date:"2026-11-17",
+      type:"Company Official · Plan",
+      title:"HPQ Silicon — Gen4 셀 기반 1.95 kWh 제품 공개",
+      text:"HPQ는 Gen4 21700 셀 84개를 적용한 약 1.95 kWh 휴대형 전원시스템을 공개하고 2027년 1분기 말~2분기 초 첫 상업 인도를 예상했습니다. 이는 회사 계획이며 실제 인도, 고객승인, 반복 생산, Qualified Output 또는 수율을 확인한 사실은 아닙니다.",
+      url:"https://hpqsilicon.com/press-release/2-kwh-power-system-designed-for-starlink-mini/"
+    },
     {
         "date": "2026-11-11",
         "type": "Official Company Presentation · LiB",
