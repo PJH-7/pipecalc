@@ -1,8 +1,15 @@
 /* DAILY_UPDATE_START */
 const DAILY={
-  updatedAt:"2026-11-18",
-  summary:"2026-11-18 공개 업데이트: KAIST의 graphite-silicon 복합음극 계면 연구와 HPQ Gen4 셀 적용 제품·향후 인도 계획을 반영했습니다. 연구 후보와 회사 계획을 상업 양산·실제 출하와 구분합니다.",
+  updatedAt:"2026-11-19",
+  summary:"2026-11-19 공개 업데이트: Sila와 Panasonic Energy의 Titan Silicon 다년간 상업 Offtake 계약을 반영했습니다. 계약 체결과 고객 Qualification·Qualified Output·실제 출하를 구분합니다.",
   items:[
+    {
+      date:"2026-11-18",
+      type:"Company Official · LiB / Commercialization",
+      title:"Sila–Panasonic Energy — Titan Silicon 장기 Offtake 계약",
+      text:"Sila는 Panasonic Energy Corporation of North America와 다년간 상업 Offtake 계약을 체결하고 Moses Lake에서 생산하는 Titan Silicon Si/C 음극재를 Panasonic의 미국 배터리 제조 거점에 공급한다고 발표했습니다. Sila는 공급 준비를 고객 Qualification 이후로 표현했으므로 계약 체결을 Qualification 완료, Qualified Output 또는 실제 출하로 해석할 수 없습니다. 공개자료에는 소재 생산량, 공장·Train·Reactor 구성, 수율/OEE와 첫 출하 시점이 제시되지 않았습니다.",
+      url:"https://www.businesswire.com/news/home/20261118877583/en/"
+    },
     {
       date:"2026-11-17",
       type:"Official Research · LiB",
